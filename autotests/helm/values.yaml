@@ -1,0 +1,34 @@
+global:
+  nameOverride: inca-smc-mlops-challenge-autotests
+  replicaCount: 1
+
+  image:
+    repository: 196144095322.dkr.ecr.us-east-1.amazonaws.com/smc-mlops-challenge-autotest
+    tag: latest
+    pullPolicy: Always
+
+  nodeSelector:
+    type: worker
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 350Mi
+    requests:
+      cpu: 750m
+      memory: 200Mi
+
+  cronjob:
+    create: true
+    suspend: true
+    backoffLimit: 0
+    activeDeadlineSeconds: 3600 # 1h
+
+  env:
+    PARTICIPANT_NAME: <REPLACE_WITH_USERNAME>
+    api_host: http://inca-smc-mlops-challenge-solution.default.svc.cluster.local/<REPLACE_WITH_ENDPOINT>
+
+    # K6, do not edit!
+    K6_PROMETHEUS_RW_SERVER_URL: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+    K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: true
+    K6_OUT: xk6-prometheus-rw
