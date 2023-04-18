@@ -1,0 +1,37 @@
+name: Build Autotests and push to ECR
+on:
+  push:
+    branches: [main]
+    paths: [autotests/app/**]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  aws_region: us-east-1
+  ecr_repo: smc-mlops-challenge-autotest
+  working_dir: ./autotests/app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.aws_region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker image to ECR
+        working-directory: ${{ env.working_dir }}
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ecr_repo }}:${{ github.sha }} -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ecr_repo }}:latest -f k6.Dockerfile  .
+          docker push --all-tags ${{ steps.login-ecr.outputs.registry }}/${{ env.ecr_repo }}

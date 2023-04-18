@@ -1,0 +1,44 @@
+name: Build Solution and push to ECR
+
+concurrency:
+  group: environment-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "solution/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  aws_region: us-east-1
+  ecr_repo: smc-mlops-challenge-solutions
+  working_dir: ./solution
+
+jobs:
+  build:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.aws_region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker image to ECR
+        working-directory: ${{ env.working_dir }}
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ecr_repo }}:${{ github.actor }}-${{ github.sha }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ecr_repo }}:${{ github.actor }}-${{ github.sha }}
