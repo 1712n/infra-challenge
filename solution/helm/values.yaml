@@ -18,17 +18,10 @@ global:
       cpu: 7000m
       memory: 25Gi
 
-  pod:
-    ports:
-      - name: http
-        containerPort: 8000
-        protocol: TCP
-
   service:
     create: true
     type: NodePort
     port: 80
-    targetPort: 8000
 
   deployment:
     create: true
@@ -45,5 +38,4 @@ global:
               storageClassName: gp2
               resources:
                 requests:
-                  # TODO: adjust when we know the size of the models
                   storage: 10Gi
