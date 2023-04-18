@@ -69,11 +69,11 @@ Also you can find an example of such a request in `autotests/app/src/main.js`.
 
 Your service should respond in the following format. You can also find an example of the expected response in `autotests/app/src/main.js`.
 
-```json
+```js
 {
     "cardiffnlp": {
         "score": 0.2, // float
-        "label": "POSITIVE" // or "NEGATIVE"
+        "label": "POSITIVE" // "NEGATIVE", or "NEUTRAL"
     },
     "ivanlau": {
         "score": 0.2, // float
