@@ -20,13 +20,23 @@ MODELS = {
 
 
 async def model_inference_task(model_path, q):
-    print(f"loading {model_path}...")
     text_classification_pipeline = pipeline('text-classification', model=model_path, device=0)
-    print(f"done loading {model_path}, waiting on the channel")
     while True:
-        (text, response_q) = await q.get()
-        inference_result = text_classification_pipeline(text)[0]
-        await response_q.put(inference_result)
+        strings, queues = [], []
+        while True:
+            try:
+                (string, rq) = await asyncio.wait_for(q.get(), timeout=0.03)
+            except asyncio.exceptions.TimeoutError:
+                break
+            strings.append(string)
+            queues.append(rq)
+            if len(strings) == 3:
+                break
+        if not strings:
+            continue
+        outs = text_classification_pipeline(strings, batch_size=len(strings))
+        for rq, out in zip(queues, outs):
+            await rq.put(out)
 
 
 @app.on_event("startup")
