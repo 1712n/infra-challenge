@@ -26,7 +26,7 @@ global:
 
   env:
     PARTICIPANT_NAME: Khush Patel
-    api_host: http://inca-smc-mlops-challenge-solution.default.svc.cluster.local/8000
+    api_host: http://inca-smc-mlops-challenge-solution.default.svc.cluster.local/process
 
     # K6, do not edit!
     K6_PROMETHEUS_RW_SERVER_URL: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
