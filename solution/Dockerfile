@@ -1,13 +1,14 @@
 # syntax = docker/dockerfile:1.4
 
-FROM python:3.10.11-slim-bullseye as models_storage_stage
+FROM python:3.10.11-slim-bullseye
 
 RUN apt-get update --yes && \
     apt-get install --yes --no-install-recommends \
     git \
     git-lfs
 
-WORKDIR /models
+RUN mkdir -p /code/models
+WORKDIR /code/models
 
 RUN git clone https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment && \
     git clone https://huggingface.co/ivanlau/language-detection-fine-tuned-on-xlm-roberta-base && \
@@ -15,11 +16,7 @@ RUN git clone https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentime
     git clone https://huggingface.co/EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus && \
     git clone https://huggingface.co/jy46604790/Fake-News-Bert-Detect
 
-FROM python:3.10.11-slim-bullseye as app 
-
 WORKDIR /code
-RUN mkdir -p /code/models
-COPY --from=models_storage_stage /models /code/models
 
 COPY ./requirements.txt /code/requirements.txt
 RUN pip install -r /code/requirements.txt 
