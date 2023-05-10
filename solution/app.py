@@ -25,7 +25,7 @@ async def model_inference_task(model_path, q):
         strings, queues = [], []
         while True:
             try:
-                (string, rq) = await asyncio.wait_for(q.get(), timeout=0.03)
+                (string, rq) = await asyncio.wait_for(q.get(), timeout=0.015)
             except asyncio.exceptions.TimeoutError:
                 break
             strings.append(string)
