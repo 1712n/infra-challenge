@@ -1,14 +1,11 @@
 import asyncio
 
-from concurrent.futures import ProcessPoolExecutor
-
 from fastapi import FastAPI
 from transformers import pipeline
 from starlette.requests import Request
 
 
 app = FastAPI()
-SHARED_PROCESS_POOL = ProcessPoolExecutor(max_workers=5)
 
 MODELS = {
     "cardiffnlp": "models/twitter-xlm-roberta-base-sentiment",
