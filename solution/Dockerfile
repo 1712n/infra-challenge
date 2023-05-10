@@ -1,11 +1,8 @@
 # syntax = docker/dockerfile:1.4
 
-# todo: add checking out to specific revision to avoid unexpected changes to model behaviour?
-
 FROM python:3.10.11-slim-bullseye as models_storage_stage
 
-RUN --mount=type=cache,id=storage-apt,target=/var/cache/apt \
-    apt-get update --yes && \
+RUN apt-get update --yes && \
     apt-get install --yes --no-install-recommends \
     git \
     git-lfs
@@ -25,8 +22,7 @@ RUN mkdir -p /code/models
 COPY --from=models_storage_stage /models /code/models
 
 COPY ./requirements.txt /code/requirements.txt
-RUN --mount=type=cache,id=infra-challenge-pip,target=/root/.cache \
-    pip install -r /code/requirements.txt 
+RUN pip install -r /code/requirements.txt 
 
 COPY app.py /code
 
