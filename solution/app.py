@@ -1,11 +1,9 @@
 # Import required libraries
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoConfig  
-import numpy as np 
-# import time
-from scipy.special import softmax
-from pydantic import BaseModel
-
+import numpy as np  
+from scipy.special import softmax 
+from fastapi import Request, Body
 # Initialize a FastAPI app instance
 app = FastAPI()
 
@@ -160,15 +158,11 @@ def jy46604790_precessing(text: str) -> dict:
     
     return result
 
-
-class TextIn(BaseModel):
-    text: str
-    
 # Define a process route
 @app.post("/process")
-def predict(payload: TextIn): 
+async def predict(request: Request): 
     # start = time.time()
-    text = preprocess(payload.text)
+    text = preprocess((await request.body()).decode())
     results_cardiffnlp =  cardiffnlp_precessing(text)
     results_ivanlau = ivanlau_precessing(text)
     results_svalabs = svalabs_precessing(text)
