@@ -25,8 +25,8 @@ global:
     activeDeadlineSeconds: 3600 # 1h
 
   env:
-    PARTICIPANT_NAME: <REPLACE_WITH_USERNAME>
-    api_host: http://inca-smc-mlops-challenge-solution.default.svc.cluster.local/<REPLACE_WITH_ENDPOINT>
+    PARTICIPANT_NAME: foodsnow
+    api_host: http://inca-smc-mlops-challenge-solution.default.svc.cluster.local/process
 
     # K6, do not edit!
     K6_PROMETHEUS_RW_SERVER_URL: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
