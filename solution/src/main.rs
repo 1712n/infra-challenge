@@ -10,11 +10,15 @@ use rust_bert::pipelines::sequence_classification::SequenceClassificationModel;
 use rust_bert::pipelines::sequence_classification::Label;
 use rust_bert::pipelines::common::ModelType;
 use rust_bert::resources::LocalResource;
-use tch::Device;
 use tokio::{sync::oneshot, task};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str};
 use warp::Filter;
+
+const MODEL_DIR_NAME_FAKE_NEWS: &'static str = "Fake-News-Bert-Detect";
+const MODEL_DIR_NAME_LANGUAGE: &'static str = "language-detection-fine-tuned-on-xlm-roberta-base";
+const MODEL_DIR_NAME_SENTIMENT: &'static str = "twitter-xlm-roberta-base-sentiment";
+const MODEL_DIR_NAME_SPAM: &'static str = "twitter-xlm-roberta-crypto-spam";
+const MODEL_DIR_NAME_TOXICITY: &'static str = "xlm_roberta_base_multilingual_toxicity_classifier_plus";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ModelResult {
@@ -22,306 +26,132 @@ pub struct ModelResult {
     pub label: String,
 }
 
-// let config = SequenceClassificationConfig::new(ModelType::Roberta,
-//    LocalResource { local_path: PathBuf::from("/models/twitter-xlm-roberta-base-sentiment/") };
-//    LocalResource { local_path: PathBuf::from("/models/twitter-xlm-roberta-base-sentiment/sentencepiece.bpe.model") };
-//    LocalResource { local_path: PathBuf::from("/models/twitter-xlm-roberta-base-sentiment/config.json") };
-//    None,
-//    true,
-//    None,
-//    None,
-// );
-
-// let config = SequenceClassificationConfig::new(ModelType::Roberta,
-//    LocalResource { local_path: PathBuf::from("/models/language-detection-fine-tuned-on-xlm-roberta-base/") };
-//    LocalResource { local_path: PathBuf::from("/models/language-detection-fine-tuned-on-xlm-roberta-base/sentencepiece.bpe.model") };
-//    LocalResource { local_path: PathBuf::from("/models/language-detection-fine-tuned-on-xlm-roberta-base/config.json") };
-//    None,
-//    true,
-//    None,
-//    None,
-// );
-
-// let config = SequenceClassificationConfig::new(ModelType::Roberta,
-//    LocalResource { local_path: PathBuf::from("/models/twitter-xlm-roberta-crypto-spam/") };
-//    LocalResource { local_path: PathBuf::from("/models/twitter-xlm-roberta-crypto-spam/sentencepiece.bpe.model") };
-//    LocalResource { local_path: PathBuf::from("/models/twitter-xlm-roberta-crypto-spam/config.json") };
-//    None,
-//    true,
-//    None,
-//    None,
-// );
-
-// let config = SequenceClassificationConfig::new(ModelType::Roberta,
-//    LocalResource { local_path: PathBuf::from("/models/xlm_roberta_base_multilingual_toxicity_classifier_plus/") };
-//    LocalResource { local_path: PathBuf::from("/models/xlm_roberta_base_multilingual_toxicity_classifier_plus/sentencepiece.bpe.model") };
-//    LocalResource { local_path: PathBuf::from("/models/xlm_roberta_base_multilingual_toxicity_classifier_plus/config.json") };
-//    None,
-//    true,
-//    None,
-//    None,
-// );
-
-// let config = SequenceClassificationConfig::new(ModelType::Roberta,
-//    LocalResource { local_path: PathBuf::from("/models/Fake-News-Bert-Detect/") };
-//    LocalResource { local_path: PathBuf::from("/models/Fake-News-Bert-Detect/vocab.json") };
-//    LocalResource { local_path: PathBuf::from("/models/Fake-News-Bert-Detect/config.json") };
-//    LocalResource { local_path: PathBuf::from("/models/Fake-News-Bert-Detect/merges.txt") };
-//    true,
-//    None,
-//    None,
-// );
-
-// let sequence_classification_model = SequenceClassificationModel::new(config)?;
-// let input = [
-//     "Probably my all-time favorite movie, a story of selflessness, sacrifice and dedication to a noble cause, but it's not preachy or boring.",
-//     "This film tried to be too many things all at once: stinging political satire, Hollywood blockbuster, sappy romantic comedy, family values promo...",
-//     "If you like original gut wrenching laughter you will like this movie. If you are young or old then you will love this movie, hell even my mom liked it.",
-// ];
-// let output = sequence_classification_model.predict(&input);
-// 
-
-
-// use rust_bert::pipelines::sentiment::{Sentiment, SentimentConfig, SentimentModel};
-
-// #[tokio::main]
-// async fn main() -> Result<()> {
-//     let (_handle, classifier) = SentimentClassifier::spawn();
-
-//     let texts = vec![
-//         "Classify this positive text".to_owned(),
-//         "Classify this negative text".to_owned(),
-//     ];
-//     let sentiments = classifier.predict(texts).await?;
-//     println!("Results: {sentiments:?}");
-
-//     Ok(())
-// }
-
-/// Message type for internal channel, passing around texts and return value
-/// senders
 type Message = (Vec<String>, oneshot::Sender<Vec<Label>>);
 
-/// Runner for sentiment classification
-#[derive(Debug, Clone)]
-pub struct SentimentClassifier {
+#[derive(Debug)]
+pub struct SequenceClassifierProcessor {
+    handle: JoinHandle<Result<()>>,
     sender: mpsc::SyncSender<Message>,
 }
 
-impl SentimentClassifier {
-    /// Spawn a classifier on a separate thread and return a classifier instance
-    /// to interact with it
-    pub fn spawn() -> (JoinHandle<Result<()>>, SentimentClassifier) {
+impl SequenceClassifierProcessor {
+    fn new(model_dir_name: String) -> SequenceClassifierProcessor {
         let (sender, receiver) = mpsc::sync_channel(100);
-        println!("6");
-        let handle = thread::spawn(move || Self::runner(receiver));
-        (handle, SentimentClassifier { sender })
+        let handle = thread::spawn(move || Self::runner(model_dir_name, receiver));
+        SequenceClassifierProcessor {
+            handle: handle,
+            sender: sender
+        }
     }
 
-    /// The classification runner itself
-    fn runner(receiver: mpsc::Receiver<Message>) -> Result<()> {
-        // Needs to be in sync runtime, async doesn't work
-        // let model = SentimentModel::new(SentimentConfig::default())?;
-        // println!("4");
-        // let model_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/Fake-News-Bert-Detect/rust_model.ot"),
-        // };
-        // let vocab_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/Fake-News-Bert-Detect/vocab.json"),
-        // };
-        // let config_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/Fake-News-Bert-Detect/config.json"),
-        // };
-        // let merges_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/Fake-News-Bert-Detect/merges.txt"),
-        // };
-        // println!("7");
+    fn runner(model_dir_name: String, receiver: mpsc::Receiver<Message>) -> Result<()> {
+        let config: SequenceClassificationConfig;
+        if model_dir_name == MODEL_DIR_NAME_FAKE_NEWS {
+            let model_resource = LocalResource {
+                local_path: PathBuf::from(format!("/models/{}/rust_model.ot", model_dir_name))
+            };
+            let config_resource = LocalResource {
+                local_path: PathBuf::from(format!("/models/{}/config.json", model_dir_name))
+            };
+            let vocab_resource = LocalResource {
+                local_path: PathBuf::from(format!("/models/{}/vocab.json", model_dir_name))
+            };
+            let merges_resource = LocalResource {
+                local_path: PathBuf::from(format!("/models/{}/merges.txt", model_dir_name))
+            };
 
-        // let config = SequenceClassificationConfig::new(
-        //    ModelType::Roberta,
-        //    model_resource,
-        //    config_resource,
-        //    vocab_resource,
-        //    Some(merges_resource),
-        //    true,
-        //    None,
-        //    None
-        // );
+            config = SequenceClassificationConfig::new(
+               ModelType::Roberta,
+               model_resource,
+               config_resource,
+               vocab_resource,
+               Some(merges_resource),
+               true,
+               None,
+               None
+            );
+        } else {
+            let model_resource = LocalResource {
+                local_path: PathBuf::from(format!("/models/{}/rust_model.ot", model_dir_name))
+            };
+            let config_resource = LocalResource {
+                local_path: PathBuf::from(format!("/models/{}/config.json", model_dir_name))
+            };
+            let vocab_resource = LocalResource {
+                local_path: PathBuf::from(format!("/models/{}/sentencepiece.bpe.model", model_dir_name))
+            };
 
-        // println!("4");
-        // let model_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/xlm_roberta_base_multilingual_toxicity_classifier_plus/rust_model.ot"),
-        // };
-        // let vocab_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/xlm_roberta_base_multilingual_toxicity_classifier_plus/sentencepiece.bpe.model"),
-        // };
-        // let config_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/xlm_roberta_base_multilingual_toxicity_classifier_plus/config.json"),
-        // };
-        // println!("7");
-
-        // let config = SequenceClassificationConfig::new(
-        //    ModelType::XLMRoberta,
-        //    model_resource,
-        //    config_resource,
-        //    vocab_resource,
-        //    None,
-        //    true,
-        //    None,
-        //    None
-        // );
-        // println!("7.5");
-
-        // println!("4");
-        // let model_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/twitter-xlm-roberta-crypto-spam/rust_model.ot"),
-        // };
-        // let vocab_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/twitter-xlm-roberta-crypto-spam/sentencepiece.bpe.model"),
-        // };
-        // let config_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/twitter-xlm-roberta-crypto-spam/config.json"),
-        // };
-        // println!("7");
-
-        // let config = SequenceClassificationConfig::new(
-        //    ModelType::XLMRoberta,
-        //    model_resource,
-        //    config_resource,
-        //    vocab_resource,
-        //    None,
-        //    true,
-        //    None,
-        //    None
-        // );
-        // println!("7.5");
-
-        // let model = SequenceClassificationModel::new(config).unwrap();
-        // println!("8");
-
-        // println!("4");
-        // let model_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/language-detection-fine-tuned-on-xlm-roberta-base/rust_model.ot"),
-        // };
-        // let vocab_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/language-detection-fine-tuned-on-xlm-roberta-base/sentencepiece.bpe.model"),
-        // };
-        // let config_resource = LocalResource {
-        //     local_path: PathBuf::from("/models/language-detection-fine-tuned-on-xlm-roberta-base/config.json"),
-        // };
-        // println!("7");
-
-        // let config = SequenceClassificationConfig::new(
-        //    ModelType::XLMRoberta,
-        //    model_resource,
-        //    config_resource,
-        //    vocab_resource,
-        //    None,
-        //    true,
-        //    None,
-        //    None
-        // );
-        // println!("7.5");
-
-        println!("4");
-        let model_resource = LocalResource {
-            local_path: PathBuf::from("/models/twitter-xlm-roberta-base-sentiment/rust_model.ot"),
-        };
-        let vocab_resource = LocalResource {
-            local_path: PathBuf::from("/models/twitter-xlm-roberta-base-sentiment/sentencepiece.bpe.model"),
-        };
-        let config_resource = LocalResource {
-            local_path: PathBuf::from("/models/twitter-xlm-roberta-base-sentiment/config.json"),
-        };
-        println!("7");
-
-        let config = SequenceClassificationConfig::new(
-           ModelType::XLMRoberta,
-           model_resource,
-           config_resource,
-           vocab_resource,
-           None,
-           true,
-           None,
-           None
-        );
-        println!("7.5");
-
+            config = SequenceClassificationConfig::new(
+               ModelType::XLMRoberta,
+               model_resource,
+               config_resource,
+               vocab_resource,
+               None,
+               true,
+               None,
+               None
+            );
+        }
 
         let model = SequenceClassificationModel::new(config).unwrap();
-        println!("8");
 
         while let Ok((texts, sender)) = receiver.recv() {
-            println!("9");
             let texts: Vec<&str> = texts.iter().map(String::as_str).collect();
-            println!("10");
             let sentiments = model.predict(texts);
-            println!("11");
             sender.send(sentiments).expect("sending results");
         }
+        
         Ok(())
     }
 
-    /// Make the runner predict a sample and return the result
-    pub async fn predict(&self, texts: Vec<String>) -> Result<Vec<Label>> {
-        let (sender, receiver) = oneshot::channel();
-        println!("5");
-        task::block_in_place(|| self.sender.send((texts, sender)))?;
-        Ok(receiver.await?)
-    }
+    // async fn predict(&self, texts: Vec<String>) -> Result<Vec<Label>> {
+    //     let (sender, receiver) = oneshot::channel();
+    //     task::block_in_place(|| self.sender.send((texts, sender)))?;
+    //     Ok(receiver.await?)
+    // }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    println!("1");
-    let (_handle, classifier) = SentimentClassifier::spawn();
+    let model_dir_names = HashMap::from([
+        (String::from("jy46604790"), MODEL_DIR_NAME_FAKE_NEWS.to_owned()),
+        (String::from("ivanlau"), MODEL_DIR_NAME_LANGUAGE.to_owned()),
+        (String::from("cardiffnlp"), MODEL_DIR_NAME_SENTIMENT.to_owned()),
+        (String::from("svalabs"), MODEL_DIR_NAME_SPAM.to_owned()),
+        (String::from("EIStakovskii"), MODEL_DIR_NAME_TOXICITY.to_owned()),
+    ]);
 
-    println!("2");
-    let texts = vec![
-        "Classify this positive text".to_owned(),
-        "Classify this negative text".to_owned(),
-    ];
+    let mut processors: Vec<SequenceClassifierProcessor> = Vec::new();
+    let mut processors_channels: HashMap<String, mpsc::SyncSender<Message>> = HashMap::new();
+    for (name, dir) in &model_dir_names {
+        let p = SequenceClassifierProcessor::new(dir.to_string());
+        processors_channels.insert(name.clone(), p.sender.clone());
+        processors.push(p);
+    }
+    
+    let with_channels = warp::any().map(move || processors_channels.clone());
+    let process_handle = warp::post()
+        .and(warp::path("process"))
+        .and(warp::body::bytes())
+        .and(with_channels)
+        .and_then(|text: Bytes, pc: HashMap<String, mpsc::SyncSender<Message>>| async move {
+            println!("bytes = {:?}", text);
+            let mut final_result: HashMap<String, ModelResult> = HashMap::new(); 
+            let texts = vec![String::from_utf8(text.to_vec()).unwrap()];
+            for (name, c) in &pc {
+                let (sender, receiver) = oneshot::channel();
+                task::block_in_place(|| c.send((texts.clone(), sender))).unwrap();
+                let res = receiver.await.unwrap();
+                final_result.insert(name.to_string(), ModelResult {score: res[0].score.clone(), label: res[0].text.clone()});
+            }
+            println!("Results: {final_result:?}");
+            // Ok::<_, warp::Rejection>(format!("Hello #{}", "1"))
+            Ok::<_, warp::Rejection>(warp::reply::json(&final_result))
+        });
 
-    println!("3");
-    let sentiments = classifier.predict(texts).await?;
-    println!("Results: {sentiments:?}");
-
-    // let sample_response = r#"
-    //     {
-    //         "cardiffnlp": {
-    //             "score": 0.2,
-    //             "label": "POSITIVE"
-    //         },
-    //         "ivanlau": {
-    //             "score": 0.2,
-    //             "label": "English"
-    //         },
-    //         "svalabs": {
-    //             "score": 0.2,
-    //             "label": "SPAM"
-    //         },
-    //         "EIStakovskii": {
-    //             "score": 0.2,
-    //             "label": "LABEL_0"
-    //         },
-    //         "jy46604790": {
-    //             "score": 0.2,
-    //             "label": "LABEL_0"
-    //         }
-    //     }"#;
-    // let sample_response_de: HashMap<String, ModelResult> = from_str(sample_response).unwrap(); 
-
-    // let process_handle = warp::post()
-    //     .and(warp::path("process"))
-    //     .and(warp::body::bytes())
-    //     .map(move |_text_bytes: Bytes| {
-    //         println!("bytes = {:?}", _text_bytes);
-    //         warp::reply::json(&sample_response_de)
-    //     });
-
-    // warp::serve(process_handle)
-    //     .run(([0, 0, 0, 0], 3030))
-    //     .await;
+    warp::serve(process_handle)
+        .run(([0, 0, 0, 0], 3030))
+        .await;
     
     Ok(())
 }
