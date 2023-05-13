@@ -13,5 +13,4 @@ RUN apt-get update && apt upgrade -y && \
 
 COPY . $WORKDIR
 
-# ENTRYPOINT [ "python3", "app.py" ]
-ENTRYPOINT [ "bash" ]
+ENTRYPOINT [ "python3", "app.py" ]
