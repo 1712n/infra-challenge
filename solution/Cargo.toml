@@ -5,9 +5,11 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
+anyhow = "1"
 bytes = "1.4.0"
 warp = "0.3" 
 rust-bert = "0.20.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.83", features = ["alloc"] }
+tch = "0.10.1"
 tokio = { version = "1.20.1", features = ["rt-multi-thread", "macros"] }
