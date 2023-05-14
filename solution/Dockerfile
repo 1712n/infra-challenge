@@ -42,6 +42,6 @@ RUN --mount=type=cache,id=cargo,target=/usr/local/cargo/registry \
 WORKDIR /usr/src/infra-challenge
 COPY . .
 RUN --mount=type=cache,id=cargo,target=/usr/local/cargo/registry \
-    cargo install --target-dir /usr/local/cargo/registry/infra-challenge --debug --path .
+    cargo install --target-dir /usr/local/cargo/registry/infra-challenge --path .
 
 CMD ["./cmd.sh"]
