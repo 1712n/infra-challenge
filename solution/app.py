@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from transformers import pipeline
 from starlette.requests import Request
 
-
 app = FastAPI()
 
 models = {
@@ -16,7 +15,7 @@ models = {
 }
 
 for model_key, model_dict in models.items():
-    text_classification_pipeline = pipeline('text-classification', model=model_dict["name"], device=0)
+    text_classification_pipeline = pipeline('text-classification', model=model_dict["name"], device="cuda:0")
     model_dict["pipeline"] = text_classification_pipeline
 
 
