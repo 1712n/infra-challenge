@@ -3,7 +3,9 @@ version: "3.9"
 services:
   web:
     build: .
-    image: app 
+    image: infra_challenge
+    volumes:
+      - models:/models
     ports:
       - "8080:8080"
     deploy:
@@ -20,3 +22,6 @@ networks:
     ipam:
       config:
         - subnet: 172.16.57.0/24
+
+volumes:
+  models:

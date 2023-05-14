@@ -7,17 +7,20 @@ from starlette.requests import Request
 
 app = FastAPI()
 
-MODELS = {
-    "cardiffnlp": "models/twitter-xlm-roberta-base-sentiment",
-    "ivanlau": "models/language-detection-fine-tuned-on-xlm-roberta-base",
-    "svalabs": "models/twitter-xlm-roberta-crypto-spam",
-    "EIStakovskii": "models/xlm_roberta_base_multilingual_toxicity_classifier_plus",
-    "jy46604790": "models/Fake-News-Bert-Detect"
+models = {
+    "cardiffnlp": {"name": "cardiffnlp/twitter-xlm-roberta-base-sentiment"},
+    "ivanlau": {"name": "ivanlau/language-detection-fine-tuned-on-xlm-roberta-base"},
+    "svalabs": {"name": "svalabs/twitter-xlm-roberta-crypto-spam"},
+    "EIStakovskii": {"name": "EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus"},
+    "jy46604790": {"name": "jy46604790/Fake-News-Bert-Detect"}
 }
 
+for model_key, model_dict in models.items():
+    text_classification_pipeline = pipeline('text-classification', model=model_dict["name"], device=0)
+    model_dict["pipeline"] = text_classification_pipeline
 
-async def model_inference_task(model_path, q):
-    text_classification_pipeline = pipeline('text-classification', model=model_path, device=0)
+
+async def model_inference_task(model_name, q):
     while True:
         strings, queues = [], []
         while True:
@@ -31,7 +34,7 @@ async def model_inference_task(model_path, q):
                 break
         if not strings:
             continue
-        outs = text_classification_pipeline(strings, batch_size=len(strings))
+        outs = models[model_name]["pipeline"](strings, batch_size=len(strings))
         for rq, out in zip(queues, outs):
             await rq.put(out)
 
@@ -39,10 +42,10 @@ async def model_inference_task(model_path, q):
 @app.on_event("startup")
 async def startup_event():
     app.model_queues = {}
-    for model_key, model_path in MODELS.items():
+    for model_key in models.keys():
         q = asyncio.Queue()
         app.model_queues[model_key] = q
-        asyncio.create_task(model_inference_task(model_path, q))
+        asyncio.create_task(model_inference_task(model_key, q))
 
 
 @app.post("/process")
@@ -50,7 +53,7 @@ async def process(request: Request):
     text = (await request.body()).decode()
     if not text:
         return {}
-    result = {k: None for k in MODELS.keys()}
+    result = {k: None for k in models.keys()}
     for model_key, model_q in request.app.model_queues.items():
         response_q = asyncio.Queue()
         await model_q.put((text, response_q))

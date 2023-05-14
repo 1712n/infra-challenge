@@ -1,26 +1,17 @@
 # syntax = docker/dockerfile:1.4
 
-FROM python:3.10.11-slim-bullseye
+FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 
 RUN apt-get update --yes && \
     apt-get install --yes --no-install-recommends \
     git \
     git-lfs
 
-RUN mkdir -p /code/models
-WORKDIR /code/models
-
-RUN git clone https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment && \
-    git clone https://huggingface.co/ivanlau/language-detection-fine-tuned-on-xlm-roberta-base && \
-    git clone https://huggingface.co/svalabs/twitter-xlm-roberta-crypto-spam && \
-    git clone https://huggingface.co/EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus && \
-    git clone https://huggingface.co/jy46604790/Fake-News-Bert-Detect
-
 WORKDIR /code
-
 COPY ./requirements.txt /code/requirements.txt
 RUN pip install -r /code/requirements.txt 
-
 COPY app.py /code
+
+ENV TRANSFORMERS_CACHE=/models
 
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"] 
