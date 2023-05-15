@@ -4,6 +4,10 @@ global:
   env:
     DEPLOY_MODE: "PROD"
 
+  resources:
+    limits:
+      nvidia.com/gpu: 1
+
   # change 8000 to your application target port
   pod:
     ports:
