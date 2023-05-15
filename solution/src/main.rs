@@ -126,7 +126,7 @@ fn spawn_dispatch_task(model_runner_sender_map: ModelRunnerSenderMap) -> (mpsc::
                     }
                 }
                 recv_tries_count += 1;
-                if recv_tries_count == INFERENCE_BATCH_SIZE - 1 {
+                if recv_tries_count == INFERENCE_BATCH_SIZE {
                     break;
                 }
             }
