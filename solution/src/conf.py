@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-import yaml
 
+import yaml
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,5 +20,5 @@ else:
 
 MODELS_LIST_CONF_PATH = WORKSPACE_PATH / Path("models_list.yaml")
 
-with open(MODELS_LIST_CONF_PATH, 'r') as stream:
+with open(MODELS_LIST_CONF_PATH, "r") as stream:
     models_dict = yaml.safe_load(stream)
