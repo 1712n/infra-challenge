@@ -1,0 +1,6 @@
+-c requirements.txt
+flake8
+black
+bandit
+isort
+locust

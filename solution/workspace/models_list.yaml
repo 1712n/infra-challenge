@@ -1,0 +1,20 @@
+cardiffnlp:
+  url: https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment
+  model_path: cardiffnlp/twitter-xlm-roberta-base-sentiment
+  task: text-classification
+ivanlau:
+  url: https://huggingface.co/ivanlau/language-detection-fine-tuned-on-xlm-roberta-base
+  model_path: ivanlau/language-detection-fine-tuned-on-xlm-roberta-base
+  task: text-classification
+svalabs:
+  url: https://huggingface.co/svalabs/twitter-xlm-roberta-crypto-spam
+  model_path: svalabs/twitter-xlm-roberta-crypto-spam
+  task: text-classification
+EIStakovskii:
+  url: https://huggingface.co/EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus
+  model_path: EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus
+  task: text-classification
+jy46604790:
+  url: https://huggingface.co/jy46604790/Fake-News-Bert-Detect
+  model_path: jy46604790/Fake-News-Bert-Detect
+  task: text-classification

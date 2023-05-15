@@ -1,0 +1,43 @@
+global:
+  # add any variables you need in format `key: value`
+  # variables will be available in the container as environment variables
+  env:
+    DEPLOY_MODE: "PROD"
+
+  # change 8000 to your application target port
+  pod:
+    ports:
+      - name: http
+        containerPort: 8000
+        protocol: TCP
+  service:
+    targetPort: 8000
+
+  # add any configmap data you need
+  # configmaps will be mounted to /workspace/<configmap-name>
+  config:
+    mount:
+      path: /workspace
+    # Map of configmap entries. Entries might be of types: string, map
+    data:
+      models_list.yaml:
+        cardiffnlp:
+          url: https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment
+          model_path: cardiffnlp/twitter-xlm-roberta-base-sentiment
+          task: text-classification
+        ivanlau:
+          url: https://huggingface.co/ivanlau/language-detection-fine-tuned-on-xlm-roberta-base
+          model_path: ivanlau/language-detection-fine-tuned-on-xlm-roberta-base
+          task: text-classification
+        svalabs:
+          url: https://huggingface.co/svalabs/twitter-xlm-roberta-crypto-spam
+          model_path: svalabs/twitter-xlm-roberta-crypto-spam
+          task: text-classification
+        EIStakovskii:
+          url: https://huggingface.co/EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus
+          model_path: EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus
+          task: text-classification
+        jy46604790:
+          url: https://huggingface.co/jy46604790/Fake-News-Bert-Detect
+          model_path: jy46604790/Fake-News-Bert-Detect
+          task: text-classification
