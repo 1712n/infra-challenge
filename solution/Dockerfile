@@ -21,10 +21,9 @@ WORKDIR /app
 COPY --from=build /app/venv ./venv
 
 COPY src/ src/
-COPY scripts/start.sh ./
+COPY scripts/start.sh ./start.sh
 
 RUN chmod +x ./start.sh
 
 ENTRYPOINT ["./start.sh"]
-# ENTRYPOINT [ "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000" ]
 EXPOSE 8000
