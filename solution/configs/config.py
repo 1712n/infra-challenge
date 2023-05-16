@@ -15,6 +15,4 @@ class AppConfig(YamlModel):
     # app parameters
     port: int
     workers: int
-    # async queues parameters
-    timeout: float
 
