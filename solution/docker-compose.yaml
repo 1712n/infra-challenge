@@ -11,3 +11,10 @@ services:
     volumes:
       - C:/Users/User/.cache/huggingface/hub:/root/.cache/huggingface/hub
       - C:/Users/User/projects/tst_mlops/solution/workspace:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]

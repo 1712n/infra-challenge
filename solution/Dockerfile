@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster as build
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime as build
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ ENV PATH="/app/venv/bin:$PATH"
 
 RUN python3 -m pip install -r requirements.txt
 
-FROM python:3.8-slim-buster as prod
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime as prod
 
 ENV PYTHONPATH "$PYTHONPATH:/app/src"
 ENV PATH="/app/venv/bin:$PATH"
