@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import List
 
 import torch
 from transformers import pipeline
@@ -27,7 +28,7 @@ class BaseTextClassificationModel(ABC):
         ...
 
     @abstractmethod
-    def __call__(self, input_text: str) -> TextClassificationModelData:
+    def __call__(self, input_texts: List[str]) -> List[TextClassificationModelData]:
         ...
 
 
@@ -42,11 +43,8 @@ class TransformerTextClassificationModel(BaseTextClassificationModel):
                 )
         return sentiment_task
 
-    def __call__(self, input_text: str) -> TextClassificationModelData:
-        if isinstance(input_text, str):
-            prediction = self.model(input_text)[0]
-            prediction = TextClassificationModelData(self.name, **prediction)
-            return prediction
-        else:
-            raise TypeError("Model input text must be str type")
+    def __call__(self, input_texts: List[str]) -> List[TextClassificationModelData]:
+        predictions = self.model(input_texts, batch_size=len(input_texts))
+        predictions = [TextClassificationModelData(self.name, **prediction) for prediction in predictions]
+        return predictions
 
