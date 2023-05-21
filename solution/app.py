@@ -35,12 +35,21 @@ router = APIRouter()
 
 
 @app.on_event("startup")
-async def create_queue():
+async def create_queues():
     app.models_queues = {}
     for md in models:
         task_queue = asyncio.Queue()
         app.models_queues[md.name] = task_queue
         asyncio.create_task(recognition_handler.handle(md.name, task_queue))
+
+
+@app.on_event("startup")
+async def warm_up_models():
+    text = "cool text"
+    input_token = recognition_handler.recognition_service.service_models[0].tokenize_texts([text])
+    recognitions = [model(input_token) for model in recognition_handler.recognition_service.service_models]
+    print(f"Warmup succesfull, results: {recognitions}")
+
 
 
 @router.post("/process", response_model=ResponseSchema)
