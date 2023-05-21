@@ -16,6 +16,7 @@ class PredictionHandler:
 
     async def handle(self, model_name, model_queue):
         while True:
+            inputs = None
             texts = []
             queues = []
 
@@ -33,7 +34,8 @@ class PredictionHandler:
                         None
                         )
                 if model:
-                    outs = model(texts)
+                    inputs = model.tokenize_texts(texts)
+                    outs = model(inputs)
                     for rq, out in zip(queues, outs):
                         await rq.put(out)
 
