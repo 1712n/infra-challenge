@@ -14,28 +14,43 @@ class PredictionHandler:
         self.recognition_service = recognition_service
         self.timeout = timeout
 
-    async def handle(self, model_name, model_queue):
+    async def tokenize_texts_batch(self, consumer_queue, producer_queues):
         while True:
             texts = []
             queues = []
 
             try:
                 while True:
-                    (text, response_queue) = await asyncio.wait_for(model_queue.get(), timeout=self.timeout)
+                    text, response_q = await asyncio.wait_for(consumer_queue.get(), timeout=self.timeout)
                     texts.append(text)
-                    queues.append(response_queue)
+                    queues.append(response_q)
+
             except asyncio.exceptions.TimeoutError:
                 pass
 
             if texts:
-                model = next(
-                        (model for model in self.recognition_service.service_models if model.name == model_name),
-                        None
-                        )
-                if model:
-                    outs = model(texts)
-                    for rq, out in zip(queues, outs):
-                        await rq.put(out)
+                inputs = self.recognition_service.service_models[0].tokenize_texts(texts)
+
+                for output_queue in producer_queues:
+                    await output_queue.put((inputs, queues))
+
+    async def handle(self, model_name, model_queue):
+        while True:
+            inputs = None
+            queues = []
+
+            while True:
+                inputs, queues = await model_queue.get()
+
+                if inputs:
+                    model = next(
+                            (model for model in self.recognition_service.service_models if model.name == model_name),
+                            None
+                            )
+                    if model:
+                        outs = model(inputs)
+                        for rq, out in zip(queues, outs):
+                            await rq.put(out)
 
     def serialize_answer(self, results: List[TextClassificationModelData]) -> ResponseSchema:
         res_model = {rec.model_name: self._recognitions_to_schema(rec) for rec in results}
