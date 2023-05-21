@@ -16,16 +16,16 @@ from handlers.recognition import PredictionHandler
 from handlers.data_models import ResponseSchema
 
 
-def build_models(model_configs: List[ModelConfig], tokenizer: str) -> List[TransformerTextClassificationModel]:
+def build_models(model_configs: List[ModelConfig]) -> List[TransformerTextClassificationModel]:
     models = [
-            TransformerTextClassificationModel(conf.model, conf.model_path, tokenizer)
+            TransformerTextClassificationModel(conf.model, conf.model_path, conf.tokenizer)
             for conf in model_configs
         ]
     return models
 
 
 config = AppConfig.parse_file("./configs/app_config.yaml")
-models = build_models(config.models, config.tokenizer)
+models = build_models(config.models)
 
 recognition_service = TextClassificationService(models)
 recognition_handler = PredictionHandler(recognition_service, config.timeout)
@@ -41,14 +41,6 @@ async def create_queues():
         task_queue = asyncio.Queue()
         app.models_queues[md.name] = task_queue
         asyncio.create_task(recognition_handler.handle(md.name, task_queue))
-
-    app.tokenizer_queue = asyncio.Queue()
-    asyncio.create_task(
-            recognition_handler.tokenize_texts_batch(
-                app.tokenizer_queue,
-                list(app.models_queues.values())
-                )
-            )
 
 
 @app.on_event("startup")
@@ -66,10 +58,8 @@ async def process(request: Request):
 
     results = []
     response_q = asyncio.Queue() # init a response queue for every request, one for all models
-
-    await app.tokenizer_queue.put((text, response_q))
-
     for model_name, model_queue in app.models_queues.items():
+        await model_queue.put((text, response_q))
         model_res = await response_q.get()
         results.append(model_res)
     return recognition_handler.serialize_answer(results)
