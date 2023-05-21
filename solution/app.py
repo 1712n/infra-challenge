@@ -1,6 +1,8 @@
 from typing import List
 from configs.config import AppConfig, ModelConfig
 
+import asyncio
+
 import uvicorn
 from fastapi import FastAPI, APIRouter
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -14,30 +16,63 @@ from handlers.recognition import PredictionHandler
 from handlers.data_models import ResponseSchema
 
 
-def build_models(model_configs: List[ModelConfig]) -> List[TransformerTextClassificationModel]:
+def build_models(model_configs: List[ModelConfig], tokenizer: str) -> List[TransformerTextClassificationModel]:
     models = [
-            TransformerTextClassificationModel(conf.model, conf.model_path, conf.tokenizer)
+            TransformerTextClassificationModel(conf.model, conf.model_path, tokenizer)
             for conf in model_configs
         ]
     return models
 
 
 config = AppConfig.parse_file("./configs/app_config.yaml")
-models = build_models(config.models)
+models = build_models(config.models, config.tokenizer)
 
 recognition_service = TextClassificationService(models)
-recognition_handler = PredictionHandler(recognition_service)
+recognition_handler = PredictionHandler(recognition_service, config.timeout)
 
 app = FastAPI()
 router = APIRouter()
 
 
+@app.on_event("startup")
+async def create_queues():
+    app.models_queues = {}
+    for md in models:
+        task_queue = asyncio.Queue()
+        app.models_queues[md.name] = task_queue
+        asyncio.create_task(recognition_handler.handle(md.name, task_queue))
+
+    app.tokenizer_queue = asyncio.Queue()
+    asyncio.create_task(
+            recognition_handler.tokenize_texts_batch(
+                app.tokenizer_queue,
+                list(app.models_queues.values())
+                )
+            )
+
+
+@app.on_event("startup")
+async def warm_up_models():
+    text = "cool text"
+    input_token = recognition_handler.recognition_service.service_models[0].tokenize_texts([text])
+    recognitions = [model(input_token) for model in recognition_handler.recognition_service.service_models]
+    print(f"Warmup succesfull, results: {recognitions}")
+
+
+
 @router.post("/process", response_model=ResponseSchema)
 async def process(request: Request):
     text = (await request.body()).decode()
-    # call handler
-    result = recognition_handler.handle(text)
-    return result
+
+    results = []
+    response_q = asyncio.Queue() # init a response queue for every request, one for all models
+
+    await app.tokenizer_queue.put((text, response_q))
+
+    for model_name, model_queue in app.models_queues.items():
+        model_res = await response_q.get()
+        results.append(model_res)
+    return recognition_handler.serialize_answer(results)
 
 
 app.include_router(router)
