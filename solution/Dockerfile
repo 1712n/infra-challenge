@@ -1,12 +1,13 @@
 # syntax = docker/dockerfile:1.4
 
-FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
 
 WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 RUN pip install -r /code/requirements.txt 
 COPY app.py /code
 
-ENV TRANSFORMERS_CACHE=/models
+ENV TRANSFORMERS_CACHE=/models \
+    TOKENIZERS_PARALLELISM=false
 
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"] 

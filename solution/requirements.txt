@@ -3,5 +3,5 @@ protobuf==3.18.0
 pydantic==1.10.7
 sentencepiece==0.1.99
 tokenizers==0.13.3
-transformers==4.28.1
+transformers==4.29.2
 uvicorn==0.20.0
