@@ -1,6 +1,4 @@
 from typing import List
-from configs.config import AppConfig, ModelConfig
-
 import asyncio
 
 import uvicorn
