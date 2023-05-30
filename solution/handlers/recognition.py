@@ -14,7 +14,7 @@ class PredictionHandler:
         self.recognition_service = recognition_service
         self.timeout = timeout
 
-    async def tokenize_texts_batch(self, consumer_queue, producer_queues):
+    async def tokenize_texts_batch(self, consumer_queue, producer_queues, max_batch_size: int):
         while True:
             texts = []
             queues = []
@@ -29,10 +29,11 @@ class PredictionHandler:
                 pass
 
             if texts:
-                inputs = self.recognition_service.service_models[0].tokenize_texts(texts)
+                for text_batch in self._perform_batches(texts, max_batch_size):
+                    inputs = self.recognition_service.service_models[0].tokenize_texts(text_batch)
 
-                for output_queue in producer_queues:
-                    await output_queue.put((inputs, queues))
+                    for output_queue in producer_queues:
+                        await output_queue.put((inputs, queues))
 
     async def handle(self, model_name, model_queue):
         while True:
@@ -60,4 +61,8 @@ class PredictionHandler:
         if recognition.model_name != "ivanlau":
             recognition.label = recognition.label.upper()
         return RecognitionSchema(score=recognition.score, label=recognition.label)
+
+    def _perform_batches(self, texts: List[str], max_batch_size):
+        for i in range(0, len(texts), max_batch_size):
+            yield texts[i:i + max_batch_size]
 
