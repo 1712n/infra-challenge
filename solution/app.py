@@ -1,5 +1,4 @@
 from typing import List
-from configs.config import AppConfig, ModelConfig
 
 import asyncio
 
@@ -10,6 +9,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
 from starlette.requests import Request
 
+from configs.config import AppConfig, ModelConfig
 from infrastructure.models import TransformerTextClassificationModel
 from service.recognition import TextClassificationService
 from handlers.recognition import PredictionHandler
