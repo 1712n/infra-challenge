@@ -1,5 +1,4 @@
 from typing import List
-from configs.config import AppConfig, ModelConfig
 
 import asyncio
 
@@ -10,23 +9,18 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
 from starlette.requests import Request
 
+from configs.config import AppConfig, ModelConfig
 from infrastructure.models import TransformerTextClassificationModel
 from service.recognition import TextClassificationService
 from handlers.recognition import PredictionHandler
 from handlers.data_models import ResponseSchema
 
 
-def build_models(model_configs: List[ModelConfig]) -> List[TransformerTextClassificationModel]:
-    models = [
-            TransformerTextClassificationModel(conf.model, conf.model_path, conf.tokenizer)
-            for conf in model_configs
-        ]
-    return models
-
-
 config = AppConfig.parse_file("./configs/app_config.yaml")
-models = build_models(config.models)
-
+models = [
+            TransformerTextClassificationModel(conf.model, conf.model_path, conf.tokenizer)
+            for conf in config.models
+        ]
 recognition_service = TextClassificationService(models)
 recognition_handler = PredictionHandler(recognition_service, config.timeout)
 
