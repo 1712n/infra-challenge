@@ -13,4 +13,4 @@ RUN apt-get update && apt upgrade -y && \
 
 COPY . $WORKDIR
 
-ENTRYPOINT [ "python3", "app.py" ]
+ENTRYPOINT [ "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1" ]
