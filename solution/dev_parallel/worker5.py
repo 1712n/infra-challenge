@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 
 class Worker:
     def __init__(self, worker_config, connection_config):
-        self.redis_config = connection_config["redis"]
+        # получение значений переменных окружения
+        redis_host = os.environ.get('REDIS_HOST')
+        redis_password = os.environ.get('REDIS_PASSWORD')
+        redis_port = int(os.environ.get('REDIS_PORT', '6379')) 
+
         self.redis_result_config = connection_config["results_db"]
 
         # Взять имя воркера из имени файла
@@ -22,13 +26,15 @@ class Worker:
         self.model_name = worker_config["model_name"]
         self.model_labels = worker_config["model_labels"]
 
-        self.redis_incoming = redis.Redis(host=self.redis_config['host'], 
-                                          port=self.redis_config['port'], 
-                                          db=worker_config['db'])
+        self.redis_incoming = redis.Redis(host=redis_host, 
+                                          port=redis_port, 
+                                          db=worker_config['db'], 
+                                          password=redis_password)
         
-        self.redis_outgoing = redis.Redis(host=self.redis_config['host'], 
-                                          port=self.redis_config['port'], 
-                                          db=self.redis_result_config['db'])
+        self.redis_outgoing = redis.Redis(host=redis_host, 
+                                          port=redis_port, 
+                                          db=self.redis_result_config['db'], 
+                                          password=redis_password)
 
         # Загрузка модели
         logger.info(f"Loading model {self.model_name}...")

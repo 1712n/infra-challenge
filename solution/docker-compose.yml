@@ -5,7 +5,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "8000:8000"
+    environment:
+      - REDIS_HOST='redis'
+      - REDIS_PASSWORD=''  
   redis:
     image: "redis:latest"
 

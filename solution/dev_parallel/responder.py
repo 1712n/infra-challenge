@@ -3,13 +3,17 @@ import tornado.gen
 import json
 import redis
 import logging
+from os import environ
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+REDIS_PASSWORD = environ.get("REDIS_PASSWORD")
+REDIS_HOST = environ.get("REDIS_HOST")
+
 # Подключение к Redis
-r = redis.Redis(host='redis', port=6379, db=6)
+r = redis.Redis(host=REDIS_HOST, password=REDIS_PASSWORD, port=6379, db=6)
 
 async def result_listener(futures_dict):
     while True:

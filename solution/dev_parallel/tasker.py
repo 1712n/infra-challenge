@@ -2,14 +2,15 @@ import asyncio
 import aioredis
 import json
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 
 class QueueManager:
     def __init__(self):
-        self.redis_host = 'redis'
-        self.redis_port = 6379
-        self.redis_password = ''  # set password if any
+        self.redis_host = os.environ.get('REDIS_HOST')  
+        self.redis_port = 6379 
+        self.redis_password = os.environ.get('REDIS_PASSWORD')  
 
     async def start(self):
         logging.info('Starting Queue Manager...')

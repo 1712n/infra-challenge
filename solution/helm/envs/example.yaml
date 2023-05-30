@@ -8,10 +8,10 @@ global:
   pod:
     ports:
       - name: http
-        containerPort: 5000
+        containerPort: 8000
         protocol: TCP
   service:
-    targetPort: 5000
+    targetPort: 8000
 
   # add any configmap data you need
   # configmaps will be mounted to /workspace/<configmap-name>

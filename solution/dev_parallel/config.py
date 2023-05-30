@@ -1,10 +1,16 @@
 config = {
-    "redis": {
-        "host": "redis",
-        "port": 6379,
+    "requests_db": {
+        "db": "0"
     },
     "results_db": {
         "db": "6"
+    },
+    # settings for farm/cluster of workers ! cannot use 0 or 6 reserved for req/res and max 16 for one redis instance
+     "farm_1": {
+        "db": ["1", "2", "3", "4", "5"]
+    },
+     "farm_2": {
+        "db": ["7", "8", "9", "10", "11"] 
     },
     
     "workers": [

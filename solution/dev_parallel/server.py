@@ -5,13 +5,16 @@ import json
 import redis
 import uuid
 import logging
-
 from responder import result_listener
+from os import environ
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
-r = redis.Redis(host='redis', port=6379, db=0)
+REDIS_PASSWORD = environ.get("REDIS_PASSWORD")
+REDIS_HOST = environ.get("REDIS_HOST")
+
+r = redis.Redis(host=REDIS_HOST, password=REDIS_PASSWORD, port=6379, db=0)
 
 futures_dict = {}
 
@@ -47,7 +50,7 @@ def make_app():
 
 if __name__ == "__main__":
     app = make_app()
-    app.listen(5000, address='0.0.0.0')
+    app.listen(8000, address='0.0.0.0')
     logging.info('Server started.')
     tornado.ioloop.IOLoop.current().spawn_callback(result_listener, futures_dict)
     logging.info('Server started, running result listener')

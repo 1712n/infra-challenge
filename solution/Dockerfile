@@ -1,4 +1,5 @@
-FROM python:3.9.1-slim
+# Использование PyTorch образа с поддержкой CUDA и cuDNN в качестве базового
+FROM pytorch/pytorch:latest-cuda-cudnn-runtime
 
 # Обновление pip
 RUN pip install --upgrade pip
@@ -12,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     vim \
     supervisor  
 
-WORKDIR /app
+WORKDIR /solution
 
 COPY requirements.txt .
 
