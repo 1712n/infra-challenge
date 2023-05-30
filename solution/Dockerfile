@@ -1,5 +1,5 @@
 # Использование PyTorch образа с поддержкой CUDA и cuDNN в качестве базового
-FROM pytorch/pytorch:latest-cuda-cudnn-runtime
+FROM pytorch/pytorch:latest
 
 # Обновление pip
 RUN pip install --upgrade pip
