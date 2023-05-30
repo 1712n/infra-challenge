@@ -29,21 +29,31 @@ router = APIRouter()
 
 
 @app.on_event("startup")
-async def create_queues():
+async def count_max_batch_size():
+    print("Calculating Max batch size")
+    batch_size = 100
+
+    try:
+        while True:
+            text = ["this is simple text"]*batch_size
+            inputs = [model.tokenize_texts(text) for model in models]
+            outputs = [model(m_inputs) for model, m_inputs in zip(models, inputs)]
+            batch_size += 100
+
+    except RuntimeError as err:
+        if "CUDA out of memory" in str(err):
+            batch_size -= 100
+            app.max_batch_size = batch_size
+            print(f"Max batch size calculated = {app.max_batch_size}")
+
+
+@app.on_event("startup")
+def create_queues():
     app.models_queues = {}
     for md in models:
         task_queue = asyncio.Queue()
         app.models_queues[md.name] = task_queue
-        asyncio.create_task(recognition_handler.handle(md.name, task_queue))
-
-
-@app.on_event("startup")
-async def warm_up_models():
-    text = "cool text"
-    input_token = recognition_handler.recognition_service.service_models[0].tokenize_texts([text])
-    recognitions = [model(input_token) for model in recognition_handler.recognition_service.service_models]
-    print(f"Warmup succesfull, results: {recognitions}")
-
+        asyncio.create_task(recognition_handler.handle(md.name, task_queue, app.max_batch_size))
 
 
 @router.post("/process", response_model=ResponseSchema)
