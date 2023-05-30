@@ -5,33 +5,35 @@ import torch
 from fastapi import FastAPI
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from starlette.requests import Request
+from optimum.bettertransformer import BetterTransformer
 
-torch.set_float32_matmul_precision('medium')
+torch.set_float32_matmul_precision('high')
 app = FastAPI()
 
 MODELS = {
-    "cardiffnlp": {"name": "cardiffnlp/twitter-xlm-roberta-base-sentiment"},
-    "ivanlau": {"name": "ivanlau/language-detection-fine-tuned-on-xlm-roberta-base"},
-    "svalabs": {"name": "svalabs/twitter-xlm-roberta-crypto-spam"},
-    "EIStakovskii": {"name": "EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus"},
-    "jy46604790": {"name": "jy46604790/Fake-News-Bert-Detect"}
+    "cardiffnlp": "cardiffnlp/twitter-xlm-roberta-base-sentiment",
+    "ivanlau": "ivanlau/language-detection-fine-tuned-on-xlm-roberta-base",
+    "svalabs": "svalabs/twitter-xlm-roberta-crypto-spam",
+    "EIStakovskii": "EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus",
+    "jy46604790": "jy46604790/Fake-News-Bert-Detect"
 }
 
 
 async def model_inference_task(model_name: str, q: asyncio.Queue):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device="cuda:0")
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    model = BetterTransformer.transform(model).to(device="cuda:0")
 
     while True:
         strings, queues = [], []
         while True:
             try:
-                (string, rq) = await asyncio.wait_for(q.get(), timeout=0.015)
+                (string, rq) = await asyncio.wait_for(q.get(), timeout=0.025)
             except asyncio.exceptions.TimeoutError:
                 break
             strings.append(string)
             queues.append(rq)
-            if len(strings) == 5:
+            if len(strings) == 8:
                 break
         if not strings:
             continue
@@ -63,10 +65,10 @@ async def model_inference_task(model_name: str, q: asyncio.Queue):
 @app.on_event("startup")
 async def startup_event():
     app.model_queues = {}
-    for model_key, model_value in MODELS.items():
+    for model_key, model_name in MODELS.items():
         q = asyncio.Queue()
         app.model_queues[model_key] = q
-        asyncio.create_task(model_inference_task(model_value["name"], q))
+        asyncio.create_task(model_inference_task(model_name, q))
 
 
 @app.post("/process")

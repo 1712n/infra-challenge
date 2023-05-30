@@ -5,3 +5,4 @@ sentencepiece==0.1.99
 tokenizers==0.13.3
 transformers==4.29.2
 uvicorn==0.20.0
+optimum==1.8.6
