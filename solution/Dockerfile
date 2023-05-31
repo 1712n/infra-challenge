@@ -1,6 +1,12 @@
 # Использование PyTorch образа с поддержкой CUDA и cuDNN в качестве базового
 FROM pytorch/pytorch:latest
 
+# Set environment variables
+ARG REDIS_HOST
+ENV REDIS_HOST=$REDIS_HOST
+ARG REDIS_PASSWORD
+ENV REDIS_PASSWORD=$REDIS_PASSWORD
+
 # Обновление pip
 RUN pip install --upgrade pip
 
