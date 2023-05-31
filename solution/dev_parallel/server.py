@@ -11,10 +11,20 @@ from os import environ
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
-REDIS_PASSWORD = environ.get("REDIS_PASSWORD")
+
 REDIS_HOST = environ.get("REDIS_HOST")
+# Log the Redis host and password
+logging.info(f"Redis Host: {REDIS_HOST}")
+
+REDIS_PASSWORD = environ.get("REDIS_PASSWORD")
 
 r = redis.Redis(host=REDIS_HOST, password=REDIS_PASSWORD, port=6379, db=0)
+# Try to connect to Redis
+try:
+    r.ping()
+    logging.info("Successfully connected to Redis")
+except redis.ConnectionError:
+    logging.error("Failed to connect to Redis")
 
 futures_dict = {}
 
