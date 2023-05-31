@@ -41,7 +41,18 @@ class MainHandler(tornado.web.RequestHandler):
         # Ожидание результата и его запись в ответ
         result = await future
         logging.info(f'Received result for correlation_id: {correlation_id}. Result: {result}')
-        self.write(json.dumps(result))
+        # Извлечение данных под ключом 'results'
+        results_list = result['results']
+
+        # Сортировка списка словарей по имени воркера
+        sorted_results = sorted(results_list, key=lambda k: k['worker']) 
+
+        # Объединение всех результатов в единый словарь
+        final_result = {}
+        for res in sorted_results:
+            final_result.update(res['result'])
+
+        self.write(json.dumps(final_result))
 
 def make_app():
     return tornado.web.Application([

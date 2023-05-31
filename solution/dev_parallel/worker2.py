@@ -79,7 +79,7 @@ class Worker:
         results_dict = {
                          "correlation_id": correlation_id,
                          "worker": self.queue_name,
-                         "result": result[self.model_name.split('/')[-1]]
+                         "result": result #[self.model_name.split('/')[-1]]
                         }
         results_dict = json.dumps(results_dict)
         self.redis_outgoing.rpush(correlation_id, results_dict)
