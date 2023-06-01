@@ -7,6 +7,10 @@ ENV REDIS_HOST=$REDIS_HOST
 ARG REDIS_PASSWORD
 ENV REDIS_PASSWORD=$REDIS_PASSWORD
 
+# Set CUDA environment variables
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+
 # Обновление pip
 RUN pip install --upgrade pip
 

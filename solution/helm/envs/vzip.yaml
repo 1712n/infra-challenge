@@ -1,9 +1,11 @@
 global:
   # add any variables you need in format `key: value`
   # variables will be available in the container as environment variables
-  env:
-    EXAMPLE: "example"
-
+  # env:
+  #   EXAMPLE: "example"
+  resources:
+    limits:
+      nvidia.com/gpu: 1
   # change 8000 to your application target port
   pod:
     ports:
