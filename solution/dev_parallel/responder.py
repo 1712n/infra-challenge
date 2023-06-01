@@ -63,4 +63,4 @@ async def result_listener(futures_dict):
         else:
             logger.info('No sets with 5 values found, skipping connection attempt.')
         
-        await tornado.gen.sleep(0.05)
+        await tornado.gen.sleep(0.01)

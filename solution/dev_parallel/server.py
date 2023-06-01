@@ -30,9 +30,26 @@ futures_dict = {}
 
 class MainHandler(tornado.web.RequestHandler):
     async def post(self):
-        data = json.loads(self.request.body)
-        correlation_id = str(uuid.uuid4())
+        request_body = json.loads(self.request.body)
+        if isinstance(request_body, str):
+            # Если входные данные - просто строка, преобразуем её в словарь с ключом 'data'
+            data = {'data': request_body}
+        elif isinstance(request_body, dict) and 'data' in request_body:
+            # Если входные данные - словарь и содержат ключ 'data', используем его
+            data = request_body
+        else:
+            # Если ни одно из условий не выполнилось, возвращаем сообщение об ошибке
+            self.set_status(400)  # код статуса HTTP для "Bad Request"
+            self.write({"error": "Invalid format. Expected JSON with a 'data' key or a simple text."})
+            return
 
+        if not isinstance(data['data'], str):
+            # Если 'data' не является строкой, возвращаем сообщение об ошибке
+            self.set_status(400)
+            self.write({"error": "Invalid 'data' format. Expected a string."})
+            return
+
+        correlation_id = str(uuid.uuid4())
         logging.info(f'Received data: {data}. Assigned correlation_id: {correlation_id}.')
 
         # Назначение задачи для воркера
