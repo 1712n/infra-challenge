@@ -1,0 +1,7 @@
+optimum[onnxruntime-gpu]~=1.8.6
+onnx
+transformers~=4.29.2
+uvicorn~=0.22.0
+fastapi~=0.95.2
+starlette~=0.27.0
+numpy~=1.24.3
