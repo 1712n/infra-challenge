@@ -5,24 +5,23 @@ import torch
 from fastapi import FastAPI
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from starlette.requests import Request
-from optimum.bettertransformer import BetterTransformer
+from optimum.onnxruntime import ORTModelForSequenceClassification
 
-torch.set_float32_matmul_precision('high')
 app = FastAPI()
 
 MODELS = {
-    "cardiffnlp": "cardiffnlp/twitter-xlm-roberta-base-sentiment",
-    "ivanlau": "ivanlau/language-detection-fine-tuned-on-xlm-roberta-base",
-    "svalabs": "svalabs/twitter-xlm-roberta-crypto-spam",
-    "EIStakovskii": "EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus",
-    "jy46604790": "jy46604790/Fake-News-Bert-Detect"
+    "cardiffnlp": "/models/twitter-xlm-roberta-base-sentiment/",
+    "ivanlau": "/models/language-detection-fine-tuned-on-xlm-roberta-base/",
+    "svalabs": "/models/twitter-xlm-roberta-crypto-spam/",
+    "EIStakovskii": "/models/xlm_roberta_base_multilingual_toxicity_classifier_plus/",
+    "jy46604790": "/models/Fake-News-Bert-Detect/"
 }
 
 
 async def model_inference_task(model_name: str, q: asyncio.Queue):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name)
-    model = BetterTransformer.transform(model).to(device="cuda:0")
+    model = ORTModelForSequenceClassification.from_pretrained(model_name, provider="CUDAExecutionProvider")
+    model.to(device="cuda:0")
 
     while True:
         strings, queues = [], []
