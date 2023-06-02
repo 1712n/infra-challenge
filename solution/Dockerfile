@@ -1,6 +1,6 @@
-FROM huggingface/transformers-pytorch-gpu as builder
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime as builder
 
-FROM python:3.11
+FROM python:3.11-slim
 
 LABEL authors="sergeyrudenko"
 
