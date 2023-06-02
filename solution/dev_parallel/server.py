@@ -31,18 +31,24 @@ futures_dict = {}
 class MainHandler(tornado.web.RequestHandler):
     async def post(self):
         request_body = json.loads(self.request.body)
-        if isinstance(request_body, str):
+        if isinstance(request_body, list):
+            # Если входные данные - список словарей, преобразуем его в строку
+            data = {'data': json.dumps(request_body)}
+            await self.process_data(data)
+        elif isinstance(request_body, str):
             # Если входные данные - просто строка, преобразуем её в словарь с ключом 'data'
             data = {'data': request_body}
+            await self.process_data(data)
         elif isinstance(request_body, dict) and 'data' in request_body:
             # Если входные данные - словарь и содержат ключ 'data', используем его
-            data = request_body
+            await self.process_data(request_body)
         else:
             # Если ни одно из условий не выполнилось, возвращаем сообщение об ошибке
-            self.set_status(400)  # код статуса HTTP для "Bad Request"
+            self.set_status(400)
             self.write({"error": "Invalid format. Expected JSON with a 'data' key or a simple text."})
             return
 
+    async def process_data(self, data):
         if not isinstance(data['data'], str):
             # Если 'data' не является строкой, возвращаем сообщение об ошибке
             self.set_status(400)
