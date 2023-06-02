@@ -72,14 +72,14 @@ class Worker:
         
         label = self.model_labels[predictions]
 
-        result_key = self.model_name.split('/')[-1]
+        result_key = self.model_name.split('/')[0]
         result = {result_key: {"score": score, "label": label}}
         logger.info(f"Received task results {result}")
 
         results_dict = {
                          "correlation_id": correlation_id,
                          "worker": self.queue_name,
-                         "result": result #[self.model_name.split('/')[-1]]
+                         "result": result
                         }
         results_dict = json.dumps(results_dict)
         self.redis_outgoing.rpush(correlation_id, results_dict)

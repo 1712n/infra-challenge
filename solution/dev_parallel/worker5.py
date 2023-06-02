@@ -72,7 +72,7 @@ class Worker:
         
         label = self.model_labels[predictions]
 
-        result_key = self.model_name.split('/')[-1]
+        result_key = self.model_name.split('/')[0]
         result = {result_key: {"score": score, "label": label}}
         logger.info(f"Received task results {result}")
 
