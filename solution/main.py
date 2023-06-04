@@ -1,6 +1,7 @@
 import asyncio
 import logging.config
 import os
+import onnx
 import torch
 import onnxruntime as ort
 import uvicorn
@@ -8,6 +9,7 @@ from fastapi import FastAPI, Body, HTTPException
 from optimum.onnxruntime import ORTModelForSequenceClassification
 from starlette.responses import HTMLResponse
 from transformers import AutoTokenizer
+import onnxoptimizer
 
 # Global variables
 
@@ -45,7 +47,7 @@ def register_models(models_dict: dict[str, str]) -> None:
         try:
             g_logger.warning("Registering: %s" % model_name)
             g_model_pipelines[model_name] = (
-                ort.InferenceSession(model_path + "/model.onnx", providers=["CUDAExecutionProvider","CPUExecutionProvider"]), AutoTokenizer.from_pretrained(model_path))
+                ort.InferenceSession(model_path + "/model_opt.onnx", providers=["CUDAExecutionProvider","CPUExecutionProvider"]), AutoTokenizer.from_pretrained(model_path))
             # model.eval()
         except:
             err = " Error while registering:  %s" % model_name
@@ -69,6 +71,15 @@ def download_models() -> HTMLResponse:
             # model.eval()
             model.save_pretrained(save_directory=save_path)
             tokenizer.save_pretrained(save_directory=save_path)
+
+            # optimize model
+            original_model = onnx.load(save_path+"/model.onnx")
+            #available_passes = onnxoptimizer.get_available_passes()
+            #g_logger.warning(available_passes)
+            #optimized_model = onnxoptimizer.optimize(original_model, passes=available_passes) - specifying passes generates error
+            optimized_model = onnxoptimizer.optimize(original_model)
+            onnx.save(optimized_model, save_path+"/model_opt.onnx")
+            os.remove(save_path+"/model.onnx")
         except:
             err = " Error while loading:  %s" % model_name
             raise RuntimeError(err)
