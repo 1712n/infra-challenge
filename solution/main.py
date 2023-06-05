@@ -1,6 +1,7 @@
 import asyncio
 import logging.config
 import os
+import time
 import onnx
 import torch
 import onnxruntime as ort
@@ -10,6 +11,7 @@ from optimum.onnxruntime import ORTModelForSequenceClassification
 from starlette.responses import HTMLResponse
 from transformers import AutoTokenizer
 import onnxoptimizer
+#from fastapi.concurrency import run_in_threadpool
 
 # Global variables
 
@@ -100,20 +102,29 @@ def download_models() -> HTMLResponse:
 # Core logic functions
 @app.on_event("startup")
 async def startup_trigger():
+    pid = os.getpid()
     os.environ['TRANSFORMERS_CACHE'] = os.getcwd() + '/models'
     g_logger.setLevel(logging.WARNING)
-    g_logger.warning("Starting app...")
+    g_logger.warning("Starting app, worker: " + str(pid))
     g_logger.warning("Inference device: %s" % g_device)
-    if not os.path.exists("models/"):  # naive way to check whether models need to be downloaded todo
-        download_models()
-    # register locally downloaded models
-    register_models(G_MODELS)
+    if pid % 2 == 0: # synchonizing workers for 2 workes, only one worker can download models from hugginfaces
+        if os.path.exists(os.getcwd() + "/signal.txt"):
+            os.remove(os.getcwd() + "/signal.txt")
+        if not os.path.exists("models/"):  # naive way to check whether models need to be downloaded and sync workers todo
+            download_models()
+        register_models(G_MODELS)
+        with open(os.getcwd() + "/signal.txt", "w") as f: # signal to other workers that models been downloaded and they can start registering models
+            f.write("done")
+    else:
+        while not os.path.exists(os.getcwd() + "/signal.txt"):
+            time.sleep(0.1)
+        # register locally downloaded models
+        register_models(G_MODELS)
 
     # hopefully a hair faster
     # torch.set_float32_matmul_precision('medium')
 
-    g_logger.warning("API ready for use.")
-
+    g_logger.warning("API ready for use, worker: " + str(pid))
 
 async def inference(sentence: str, model_name: str, model: tuple) -> None:
     """perform inference"""
@@ -166,9 +177,9 @@ async def inference(sentence: str, model_name: str, model: tuple) -> None:
 @app.post("/")
 async def all_infers(sentence: str = Body(...)) -> dict:
     """inference endpoint"""
-    if not sentence:  # check whether input request text is empty
+    """if not sentence:  # check whether input request text is empty
         g_logger.warning('Request text is empty')
-        raise HTTPException(status_code=400, detail="Request text is empty")
+        raise HTTPException(status_code=400, detail="Request text is empty")"""
 
     # create inference tasks per model
     tasks = [inference(sentence, model_name, model) for model_name, model in

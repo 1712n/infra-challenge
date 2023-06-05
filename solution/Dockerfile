@@ -1,6 +1,4 @@
-FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime as builder
-
-FROM python:3.11-slim
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
 
 LABEL authors="sergeyrudenko"
 
@@ -15,9 +13,7 @@ RUN pip install xformers
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-
-#
 COPY ./main.py /code/
+COPY start.sh .
 
-#
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000", "--log-level", "critical"]
+ENTRYPOINT ["./start.sh"]
