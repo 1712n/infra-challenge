@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import List
 
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from optimum.onnxruntime import ORTModelForSequenceClassification
 
 
 @dataclass
@@ -72,3 +72,14 @@ class TransformerTextClassificationModel(BaseTextClassificationModel):
         predictions = [TextClassificationModelData(self.name, **prediction) for prediction in predictions]
         return predictions
 
+
+class OnnxTransformerTextClassificationModel(TransformerTextClassificationModel):
+
+    def _load_model(self):
+        tokenizer = AutoTokenizer.from_pretrained(self.tokenizer)
+        model = ORTModelForSequenceClassification.from_pretrained(
+                self.model_path,
+                export=True,
+                provider="CUDAExecutionProvider"
+        )
+        return pipeline("text-classification", model=model, tokenizer=tokenizer)
