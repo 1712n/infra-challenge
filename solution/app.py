@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from starlette.requests import Request
 
 from configs.config import AppConfig, ModelConfig
-from infrastructure.models import TransformerTextClassificationModel
+from infrastructure.models import OnnxTransformerTextClassificationModel
 from service.recognition import TextClassificationService
 from handlers.recognition import PredictionHandler
 from handlers.data_models import ResponseSchema
@@ -17,7 +17,7 @@ from handlers.data_models import ResponseSchema
 
 config = AppConfig.parse_file("./configs/app_config.yaml")
 models = [
-            TransformerTextClassificationModel(conf.model, conf.model_path, conf.tokenizer)
+            OnnxTransformerTextClassificationModel(conf.model, conf.model_path, conf.tokenizer)
             for conf in config.models
         ]
 
@@ -112,4 +112,3 @@ async def openapi_endpoint():
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=config.port, workers=config.workers)
-
