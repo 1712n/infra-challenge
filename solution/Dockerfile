@@ -1,4 +1,5 @@
-FROM huggingface/transformers-pytorch-gpu
+FROM ghcr.io/els-rd/transformer-deploy:0.4.0
+
 ARG DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /src
@@ -6,10 +7,7 @@ ENV PYTHONPATH="${PYTHONPATH}:${WORKDIR}"
 
 COPY requirements.txt $WORKDIR
 
-RUN apt-get update && apt upgrade -y && \
-		apt-get install -y libsm6 libxrender1 libfontconfig1 libxext6 libgl1-mesa-glx ffmpeg && \
-		pip install -U pip setuptools && \
-		pip install -U --no-cache-dir -r requirements.txt
+RUN pip install -U --no-cache-dir -r requirements.txt
 
 COPY . $WORKDIR
 

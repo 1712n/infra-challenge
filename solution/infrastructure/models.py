@@ -8,11 +8,9 @@ import onnxruntime
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from optimum.onnxruntime import ORTModelForSequenceClassification
 
-from infrastructure.optimizers import OnnxModelOptimizer
-
 
 session_options = onnxruntime.SessionOptions()
-session_options.log_severity_level = 0
+session_options.log_severity_level = 1
 
 
 @dataclass
@@ -70,7 +68,7 @@ class TransformerTextClassificationModel(BaseTextClassificationModel):
                     "score": score[label_id.item()].item()
                 }
                 for label_id, score in zip(label_ids, scores)
-            ]
+        ]
         return results
 
     def __call__(self, inputs) -> List[TextClassificationModelData]:
@@ -80,18 +78,30 @@ class TransformerTextClassificationModel(BaseTextClassificationModel):
         return predictions
 
 
-class OnnxTransformerTextClassificationModel(TransformerTextClassificationModel):
+class TrtTransformerTextClassificationModel(TransformerTextClassificationModel):
 
     def _load_model(self):
-        tokenizer = AutoTokenizer.from_pretrained(self.tokenizer)
-        model = ORTModelForSequenceClassification.from_pretrained(
+        provider_options = {
+                "trt_engine_cache_enable": True,
+                "trt_engine_cache_path": f"tmp/{self.name}"
+        }
+
+        self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer)
+        self.model = ORTModelForSequenceClassification.from_pretrained(
                 self.model_path,
                 export=True,
-                provider="CUDAExecutionProvider",
-                session_options=session_options
+                provider="TensorrtExecutionProvider",
+                provider_options=provider_options,
+                session_options=session_options,
         )
 
-        model_optimizer = OnnxModelOptimizer(model)
-        model = model_optimizer.graph_optimization(self.name, model)
+    def tokenize_texts(self, texts: List[str]):
+        inputs = self.tokenizer(
+                texts,
+                add_special_tokens=True,
+                padding=True,
+                truncation=True,
+                return_tensors="pt"
+        ).to("cuda")
+        return inputs
 
-        return pipeline("text-classification", model=model, tokenizer=tokenizer, device=self.device)
