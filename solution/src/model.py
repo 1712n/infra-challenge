@@ -22,8 +22,8 @@ class Model():
         self.model_name_short = list(model_settings.keys())[0]
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         log.info(f"Model name: {self.model_name}")
-        self.model = AutoModelForSequenceClassification.from_pretrained(f"/models/{self.model_name}")
-        self.tokenizer = AutoTokenizer.from_pretrained(f"/models/{self.model_name}")
+        self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.label_mapping = model_settings.values()[0].to_dict()["label_mapping"]
 
     def predict(self, text):

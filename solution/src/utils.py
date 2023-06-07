@@ -13,7 +13,7 @@ ch.setFormatter(formatter)
 log.addHandler(ch)
 log.setLevel(10)
 
-
+# This function can be used if there is enough space to keep the models locally
 def download_HF_models(models_settings):
     # Clone a remote repository
     for model in models_settings["models"]:

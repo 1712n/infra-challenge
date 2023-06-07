@@ -19,6 +19,6 @@ COPY ./src /code/src
 COPY ./config /code/config
 COPY ./helm /code/helm
 
-RUN python src/utils.py
+# RUN python src/utils.py
 
 EXPOSE 8000
