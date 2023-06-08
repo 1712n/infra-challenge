@@ -19,7 +19,7 @@ class Responder:
             if correlation_id not in self.tasks:
                 self.tasks[correlation_id] = [0, {}]
 
-            self.tasks[correlation_id][1][worker_name] = worker_result
+            self.tasks[correlation_id][1].update(worker_result)
             self.tasks[correlation_id][0] += 1
 
     async def process_results(self):
