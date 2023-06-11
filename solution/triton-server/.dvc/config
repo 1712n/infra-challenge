@@ -1,4 +1,4 @@
 [core]
     remote = model_storage
 ['remote "model_storage"']
-    url = ../arn:aws:s3:::electriclizard-model-registry
+    url = s3://electriclizard-models-registry/registry/
