@@ -6,4 +6,4 @@ WORKDIR /src
 COPY ./ $WORKDIR
 
 RUN pip install -U --no-cache-dir -r requirements.txt
-
+RUN git init && dvc pull
