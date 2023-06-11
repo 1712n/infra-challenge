@@ -1,0 +1,4 @@
+[core]
+    remote = model_storage
+['remote "model_storage"']
+    url = gdrive://1GFI52oisV1itWC__A65EsChGeiUx5tM_
