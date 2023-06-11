@@ -1,7 +1,6 @@
 name: "ivanlau_onnx_model"
 max_batch_size: 0
 platform: "onnxruntime_onnx"
-default_model_filename: "model.bin"
 
 input [
 {

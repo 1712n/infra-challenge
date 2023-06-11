@@ -1,4 +1,6 @@
 [core]
-    remote = model_storage
+    remote = model_storagehttp
 ['remote "model_storage"']
-    url = gdrive://1GFI52oisV1itWC__A65EsChGeiUx5tM_
+    url = s3://electriclizard-models-registry/registry/
+['remote "model_storagehttp"']
+    url = https://electriclizard-models-registry.s3.amazonaws.com/registry/
