@@ -1,0 +1,26 @@
+models:
+  - model: "cardiffnlp"
+    triton_model_name: "cardiffnlp_onnx_inference"
+    model_labels: ["NEGATIVE", "NEUTRAL", "POSITIVE"]
+  - model: "ivanlau"
+    triton_model_name: "ivanlau_onnx_inference"
+    model_labels: [
+      "Arabic", "Basque", "Breton", "Catalan", "Chinese_China", "Chinese_Hongkong", "Chinese_Taiwan",
+      "Chuvash", "Czech", "Dhivehi", "Dutch", "English", "Esperanto", "Estonian", "French", "Frisian", "Georgian",
+      "German", "Greek", "Hakha_Chin", "Indonesian", "Interlingua", "Italian", "Japanese", "Kabyle", "Kinyarwanda",
+      "Kyrgyz", "Latvian", "Maltese", "Mongolian", "Persian", "Polish", "Portuguese", "Romanian", "Romansh_Sursilvan",
+      "Russian", "Sakha", "Slovenian", "Spanish", "Swedish", "Tamil", "Tatar", "Turkish", "Ukrainian", "Welsh"
+    ]
+  - model: "svalabs"
+    triton_model_name: "svalabs_onnx_inference"
+    model_labels: ["HAM", "SPAM"]
+  - model: "EIStakovskii"
+    triton_model_name: "eistakovskii_onnx_inference"
+    model_labels: ["LABEL_0", "LABEL_1"]
+  - model: "jy46604790"
+    triton_model_name: "jy46604790_onnx_inference"
+    model_labels: ["LABEL_0", "LABEL_1"]
+
+timeout: 0.01
+triton_url: "0.0.0.0:8000"
+batch_size: 32
