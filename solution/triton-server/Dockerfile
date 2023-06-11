@@ -7,6 +7,3 @@ COPY ./ $WORKDIR
 
 RUN pip install -U --no-cache-dir -r requirements.txt
 
-RUN dvc pull
-
-ENTRYPOINT [ "tritonserver", "--model-repository=/src/models" ]

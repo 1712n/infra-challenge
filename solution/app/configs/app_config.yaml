@@ -22,5 +22,5 @@ models:
     model_labels: ["LABEL_0", "LABEL_1"]
 
 timeout: 0.01
-triton_url: "10.10.66.25:8000"
+triton_url: "0.0.0.0:8000"
 batch_size: 32
