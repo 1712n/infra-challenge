@@ -20,7 +20,7 @@ ensemble_scheduling {
     step [
         {
             model_name: "jy46604790_onnx_tokenize"
-            model_version: -1
+            model_version: 1
             input_map {
             key: "TEXT"
             value: "TEXT"
@@ -38,7 +38,7 @@ ensemble_scheduling {
         },
         {
             model_name: "jy46604790_onnx_model"
-            model_version: -1
+            model_version: 1
             input_map [
 {
     key: "input_ids"
