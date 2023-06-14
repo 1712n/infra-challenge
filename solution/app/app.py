@@ -25,7 +25,7 @@ def build_models(model_configs: List[ModelConfig], triton_url: str, batch_size: 
     return models
 
 
-config = AppConfig.parse_file("./configs/app_config.yaml")
+config = AppConfig.parse_file("./app/configs/app_config.yaml")
 env_triton_url = os.getenv("TRITON_URL", None)
 config.triton_url = config.triton_url if not env_triton_url else f"{env_triton_url}:8000"
 models = build_models(config.models, config.triton_url, config.batch_size)
