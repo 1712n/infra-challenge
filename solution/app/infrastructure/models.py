@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List
 from dataclasses import dataclass
+from time import sleep
 
 import numpy as np
 import tritonclient.http
+from socket import error as socket_error
 
 
 @dataclass
@@ -31,8 +33,11 @@ class TritonTextClassificationModel:
         self.model_score = tritonclient.http.InferRequestedOutput(name="output", binary_data=False)
 
     def _load_model(self):
-        assert self.triton_client.is_model_ready(
-                model_name=self.triton_model_name, model_version=self.model_version), f"model {self.name} not yet ready"
+        try:
+            self.triton_client.is_model_ready(model_name=self.triton_model_name, model_version=self.model_version)
+        except socket_error as err:
+            sleep(10)
+            self._load_model()
 
     def __call__(self, texts: List[str]):
         predictions = []
