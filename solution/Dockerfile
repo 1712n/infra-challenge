@@ -8,4 +8,4 @@ COPY ./ $WORKDIR
 RUN pip install -U -r requirements.txt
 RUN cd triton-server && git init && dvc pull
 
-ENTRYPOINT [ "sh /src/start.sh" ]
+ENTRYPOINT [ "bash", "start.sh" ]
