@@ -1,5 +1,12 @@
 # MLops Challenge
 
+-----
+
+## Deadline
+
+The deadline for the challenge is **June 25th, 2023**.
+
+-----
 
 ## How to participate?
 
