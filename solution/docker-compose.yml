@@ -1,0 +1,14 @@
+version: '3'
+services:
+  mlops-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST='redis'
+      - REDIS_PASSWORD=''  
+  redis:
+    image: "redis:latest"
+
