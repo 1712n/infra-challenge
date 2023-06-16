@@ -1,0 +1,17 @@
+models:
+    - cardiffnlp:
+        model_name: cardiffnlp/twitter-xlm-roberta-base-sentiment
+        label_mapping: {0: NEGATIVE, 1: NEUTRAL, 2: POSITIVE}
+    - ivanlau:
+        model_name: ivanlau/language-detection-fine-tuned-on-xlm-roberta-base
+        label_mapping: {0: Arabic, 1: Basque, 2: Breton, 3: Catalan, 4: Chinese_China, 5: Chinese_Hongkong, 6: Chinese_Taiwan, 7: Chuvash, 8: Czech, 9: Dhivehi, 10: Dutch, 11: English, 12: Esperanto, 13: Estonian, 14: French, 15: Frisian, 16: Georgian, 17: German, 18: Greek, 19: Hakha_Chin, 20: Indonesian, 21: Interlingua, 22: Italian, 23: Japanese, 24: Kabyle, 25: Kinyarwanda, 26: Kyrgyz, 27: Latvian, 28: Maltese, 29: Mongolian, 30: Persian, 31: Polish, 32: Portuguese, 33: Romanian, 34: Romansh_Sursilvan, 35: Russian, 36: Sakha, 37: Slovenian, 38: Spanish, 39: Swedish, 40: Tamil, 41: Tatar, 42: Turkish, 43: Ukranian, 44: Welsh
+}
+    - svalabs:
+        model_name: svalabs/twitter-xlm-roberta-crypto-spam
+        label_mapping: {0: HAM, 1: SPAM}
+    - EIStakovskii:
+        model_name: EIStakovskii/xlm_roberta_base_multilingual_toxicity_classifier_plus
+        label_mapping: {0: LABEL_0, 1: LABEL_1}
+    - jy46604790:
+        model_name: jy46604790/Fake-News-Bert-Detect
+        label_mapping: {0: LABEL_0, 1: LABEL_1}
