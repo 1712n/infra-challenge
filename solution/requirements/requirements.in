@@ -1,0 +1,8 @@
+fastapi
+transformers
+scipy
+sentencepiece
+protobuf==3.20.0
+uvicorn
+python-dotenv
+cachetools
