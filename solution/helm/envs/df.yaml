@@ -1,0 +1,13 @@
+global:
+#  env:
+#    EXAMPLE: "example"
+  resources:
+    limits:
+      nvidia.com/gpu: 1
+  pod:
+    ports:
+      - name: http
+        containerPort: x8000
+        protocol: TCP
+  service:
+    targetPort: 8080
