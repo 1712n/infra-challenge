@@ -6,6 +6,6 @@ WORKDIR /src
 COPY ./ $WORKDIR
 
 RUN pip install -U -r requirements.txt
-RUN cd triton-server && git init && dvc pull
+RUN git init
 
 ENTRYPOINT [ "bash", "start.sh" ]
