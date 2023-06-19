@@ -1,11 +1,14 @@
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import redis
 import asyncio
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 class ModelLoader:
     def __init__(self):
-        self.redis_client = redis.Redis(host='localhost', port=6379, db=0)
+        self.redis_client = redis.Redis(host="redis", port=6379, db=0)
         self.models = {}
+        self.executor = ThreadPoolExecutor()
 
     async def load_model(self, model_name, model_url):
         # Check if model is cached in Redis
@@ -33,12 +36,33 @@ class ModelLoader:
             "jy46604790": "jy46604790/Fake-News-Bert-Detect"
         }
 
-        tasks = []
         for model_name, model_url in model_urls.items():
-            task = asyncio.create_task(self.load_model(model_name, model_url))
-            tasks.append(task)
-
-        await asyncio.gather(*tasks)
+            await self.load_model(model_name, model_url)
 
     def get_models(self):
         return self.models
+
+    def process_request(self, text):
+        results = {}
+
+        def process_model(model_name, model, tokenizer):
+            # Perform inference for a single model
+            inputs = tokenizer.encode_plus(text, padding="longest", truncation=True, max_length=512, return_tensors="pt")
+            outputs = model(**inputs)
+            logits = outputs.logits.detach().squeeze().tolist()
+            results[model_name] = {"score": logits[0], "label": logits[1]}
+
+        # Perform inference concurrently for all models
+        threads = []
+        for model_name, model_data in self.models.items():
+            model = model_data["model"]
+            tokenizer = model_data["tokenizer"]
+            thread = threading.Thread(target=process_model, args=(model_name, model, tokenizer))
+            threads.append(thread)
+            thread.start()
+
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
+        return results
