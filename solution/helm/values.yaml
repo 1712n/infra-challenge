@@ -39,3 +39,9 @@ global:
               resources:
                 requests:
                   storage: 30Gi
+    dshm:
+      mountPath: /dev/shm
+      readOnly: false
+      spec:
+        emptyDir:
+          medium: Memory
