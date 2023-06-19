@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  mlops-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+       - REDIS_HOST=redis
+       - REDIS_PASSWORD=  
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+  k6:
+    build:
+      context: ./autotests/app
+      dockerfile: k6.Dockerfile
+    volumes:
+      - ./autotests/app/src:/app/src
+    environment:
+      - API_HOST=http://mlops-app:8000/process  
+    command: /bin/bash -c "sleep 180 && k6 run -o xk6-prometheus-rw /app/main.js"  
+    # command: run -o xk6-prometheus-rw /app/main.js
+  grafana:
+    image: grafana/grafana
+    environment:
+      - GF_LOG_LEVEL=error
+    ports:
+      - 3000:3000    
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090

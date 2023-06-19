@@ -1,0 +1,13 @@
+#default
+upstream app_servers {
+    server 0.0.0.0:8001;
+    
+}
+
+server {
+    listen 8000;
+
+    location / {
+        proxy_pass http://app_servers;
+    }
+}
