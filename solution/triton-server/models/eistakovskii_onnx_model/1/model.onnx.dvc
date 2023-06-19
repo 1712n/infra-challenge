@@ -1,0 +1,5 @@
+outs:
+- md5: 2525a3eafe2f9c84a18a42f4ddd60c63
+  size: 566752747
+  isexec: true
+  path: model.onnx

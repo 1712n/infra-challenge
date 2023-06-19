@@ -1,0 +1,6 @@
+[core]
+    remote = model_storagehttp
+['remote "model_storage"']
+    url = s3://electriclizard-models-registry/registry/
+['remote "model_storagehttp"']
+    url = https://electriclizard-models-registry.s3.amazonaws.com/registry/
