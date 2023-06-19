@@ -61,48 +61,50 @@ class Worker:
                 logger.error(f"Test failed with error: {e}. Retrying...")
                 continue
 
+    BATCH_SIZE = 5  # Подходящий размер пакета
+
     async def start(self):
-        logger.info('Worker starting async work.')
+        batch = []
         while True:
-            if not self.message_queue.empty():
+            if not self.message_queue.empty() and len(batch) < self.BATCH_SIZE:
                 message = await self.message_queue.get()
-                logger.info(f'Received message: {message}')
-                if isinstance(message, str):
-                    message_body = json.loads(message)
-                else:
-                    message_body = message
-                await self.process_message(message_body)
+                batch.append(message)
+            elif batch:
+                await self.process_batch(batch)
+                batch = []
             else:
-                # logger.info('No message in the queue.')
                 await asyncio.sleep(0.01) 
 
 
-    async def process_message(self, body):
-        correlation_id = body['correlation_id']
-        text = body['data']['data']
-        logger.info(f"Processing text: {text}")
-        inputs = self.tokenizer(text, return_tensors='pt')
+
+    async def process_batch(self, batch):
+        bodies = [json.loads(message) if isinstance(message, str) else message for message in batch]
+        texts = [body['data']['data'] for body in bodies]
+        correlation_ids = [body['correlation_id'] for body in bodies]
+        
+        inputs = self.tokenizer(texts, return_tensors='pt', padding=True, truncation=True)
 
         if torch.cuda.is_available():
-            inputs = inputs.to('cuda')
+            inputs = inputs.to('cuda')  # 
 
-        outputs = self.model(**inputs)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
 
-        predictions = outputs.logits.argmax(dim=-1).item()
+        predictions = outputs.logits.argmax(dim=-1)
         probabilities = torch.nn.functional.softmax(outputs.logits, dim=-1)
-        score = probabilities[0][predictions].item()
-        
-        label = self.model_labels[predictions]
 
-        result_key = self.model_name.split('/')[0]
-        result = {result_key: {"score": score, "label": label}}
-        logger.info(f"Received task results {result}")
+        for i, prediction in enumerate(predictions):
+            score = probabilities[i][prediction].item()
+            label = self.model_labels[prediction.item()]
+            result_key = self.model_name.split('/')[0]
+            result = {result_key: {"score": score, "label": label}}
 
-        results_dict = {
-                         "correlation_id": correlation_id,
-                         "worker": self.worker_name,
-                         "result": result
-                        }
-        results_dict = json.dumps(results_dict)
-        await self.results_queue.put(results_dict)
-        logger.info(f"Saved result to queue with key {correlation_id} : {results_dict}")
+            results_dict = {
+                             "correlation_id": correlation_ids[i],
+                             "worker": self.worker_name,
+                             "result": result
+                            }
+            results_dict = json.dumps(results_dict)
+            await self.results_queue.put(results_dict)
+
+       

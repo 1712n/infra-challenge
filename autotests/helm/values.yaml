@@ -25,7 +25,7 @@ global:
     activeDeadlineSeconds: 3600 # 1h
 
   env:
-    PARTICIPANT_NAME: <REPLACE_WITH_USERNAME>
+    PARTICIPANT_NAME: Viktor Kupko
     api_host: http://inca-smc-mlops-challenge-solution.default.svc.cluster.local/<REPLACE_WITH_ENDPOINT>
 
     # K6, do not edit!

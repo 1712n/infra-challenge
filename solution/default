@@ -1,7 +1,7 @@
 #default
 upstream app_servers {
     server 0.0.0.0:8001;
-    server 0.0.0.0:8002;
+    
 }
 
 server {

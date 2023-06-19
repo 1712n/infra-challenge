@@ -3,12 +3,15 @@ import uuid
 import logging
 from typing import Union, List, Dict
 from fastapi import HTTPException
-import asyncio  # Import asyncio
+import asyncio
 
 async def process_data(data: Union[str, List[Dict[str, str]], Dict[str, str]], queues, futures_dict, logger):
-    if isinstance(data, list):
-        # Если входные данные - список словарей, преобразуем его в строку
-        data = {'data': json.dumps(data)}
+    if data is None or data == '':
+        # Если данные пустые, создаем словарь с ключом 'data' и значением "Empty request"
+        data = {'data': "Empty request"}
+    elif isinstance(data, list):
+        # Если входные данные - список словарей, оставляем его как есть
+        data = {'data': data}
     elif isinstance(data, str):
         # Если входные данные - просто строка, преобразуем её в словарь с ключом 'data'
         data = {'data': data}
@@ -19,9 +22,9 @@ async def process_data(data: Union[str, List[Dict[str, str]], Dict[str, str]], q
         # Если ни одно из условий не выполнилось, возвращаем сообщение об ошибке
         raise HTTPException(status_code=400, detail="Invalid format. Expected JSON with a 'data' key or a simple text.")
 
-    if not isinstance(data['data'], str):
-        # Если 'data' не является строкой, возвращаем сообщение об ошибке
-        raise HTTPException(status_code=400, detail="Invalid 'data' format. Expected a string.")
+    if not isinstance(data['data'], (str, list)):
+        # Если 'data' не является строкой или списком, возвращаем сообщение об ошибке
+        raise HTTPException(status_code=400, detail="Invalid 'data' format. Expected a string or a list.")
 
     correlation_id = str(uuid.uuid4())
     logging.info(f'Received data: {data}. Assigned correlation_id: {correlation_id}.')
@@ -38,11 +41,11 @@ async def process_data(data: Union[str, List[Dict[str, str]], Dict[str, str]], q
         logging.info(f'Pushed to {id(queue)} : {message}')
 
     # Создание Future и его сохранение в словаре
-    future = asyncio.Future()  # Use asyncio.Future instead of concurrent.futures.Future
+    future = asyncio.Future()
     futures_dict[correlation_id] = future
     logging.info(f'Future created for correlation_id: {correlation_id}.')
 
     # Ожидание результата и его запись в ответ
-    result = await future  # Use await to wait for the Future to be done
+    result = await future
     logging.info(f'Received result for correlation_id: {correlation_id}. Result: {result}')
     return result
