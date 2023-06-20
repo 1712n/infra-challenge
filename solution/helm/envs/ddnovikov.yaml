@@ -1,0 +1,11 @@
+global:
+  resources:
+    limits:
+      nvidia.com/gpu: 1
+  pod:
+    ports:
+      - name: http
+        containerPort: 3030
+        protocol: TCP
+  service:
+    targetPort: 3030
