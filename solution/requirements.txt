@@ -1,0 +1,8 @@
+sentencepiece 
+transformers
+torch
+scipy
+fastapi
+uvicorn[standard]
+pydantic   
+protobuf==3.13.0
