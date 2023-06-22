@@ -1,0 +1,5 @@
+fastapi[all]
+tritonclient[all]==2.34.0
+pydantic==1.10.9
+cachetools==5.3.1
+onnxruntime_gpu==1.15.1
