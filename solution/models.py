@@ -54,5 +54,6 @@ def download_model(model_name):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 for model_name in models:
+    torch.cuda.empty_cache()
     download_model(model_name)
     print(model_name)
