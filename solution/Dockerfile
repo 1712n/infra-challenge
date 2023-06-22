@@ -19,6 +19,6 @@ ENV FASTAPI_APP=main.py
 # Expose port
 EXPOSE 8000
 
-RUN python3 models.py
+# RUN python3 models.py
 # Command to run the Flask application
-CMD ["uvicorn", "main:app", "--reload"]
+CMD ["python3", "models.py", "&&","uvicorn", "main:app", "--reload"]
