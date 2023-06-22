@@ -1,13 +1,12 @@
 # Base image
 FROM python:3.9
 
-# Copy project files into the Docker image
-COPY requirements.txt /app
-COPY main.py /app
-COPY models.py /app
-
 # Set working directory
 WORKDIR /app
+
+# Copy project files into the Docker image
+COPY ./ /app
+
 
 # Install dependencies
 RUN pip install -r requirements.txt
