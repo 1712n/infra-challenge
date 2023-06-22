@@ -7,3 +7,4 @@ numpy
 transformers==4.29.2
 torch==2.0.0
 optimum==1.8.7
+onnx==1.13.1
