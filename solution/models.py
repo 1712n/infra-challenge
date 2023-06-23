@@ -1,6 +1,5 @@
 import os
 from optimum.onnxruntime import ORTModelForSequenceClassification
-from onnxruntime.transformers.io_binding_helper import IOBindingHelper
 from onnxruntime.transformers.optimizer import optimize_model
 import torch
 
@@ -38,17 +37,20 @@ def download_model(model_name):
     model_data["optimized_onnx_path"] = os.path.join("models", optimized_onnx_path)
     model_dir = os.path.join("models", model_name)
 
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
+    os.makedirs(model_dir, exist_ok=True)
 
-    model = ORTModelForSequenceClassification.from_pretrained(model_data["model_name"], export=True, use_io_binding=False).to(device)
-    model.save_pretrained(str("models/" + optimized_onnx_path))
-    model = optimize_model(
-    input=str("models/" + optimized_onnx_path + "/model.onnx"),
-    model_type="bert",
-    use_gpu=True
-)
-    model.save_model_to_file(str("models/" + optimized_onnx_path + "/model.onnx"))
+    with torch.no_grad():
+        model = ORTModelForSequenceClassification.from_pretrained(
+            model_data["model_name"], export=True, use_io_binding=False
+        ).to(device)
+        model.save_pretrained(f"models/{optimized_onnx_path}")
+
+        optimize_model(
+            input=f"models/{optimized_onnx_path}/model.onnx",
+            model_type="bert",
+            use_gpu=True,
+        ).save_model_to_file(f"models/{optimized_onnx_path}/model.onnx")
+
 
     
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
