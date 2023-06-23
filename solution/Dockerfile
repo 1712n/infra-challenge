@@ -8,7 +8,7 @@ WORKDIR /app
 COPY requirements.txt /app
 COPY main.py /app
 COPY models.py /app
-RUN ls
+RUN free -g
 
 # Install dependencies
 RUN pip install -r requirements.txt
