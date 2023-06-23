@@ -12,7 +12,7 @@ RUN ls
 
 # Install dependencies
 RUN pip install -r requirements.txt
-
+RUN python3 models.py
 # Set environment variables
 ENV FASTAPI_APP=main.py
 
@@ -21,4 +21,4 @@ EXPOSE 8000
 
 # RUN python3 models.py
 # Command to run the Flask application
-CMD ["python3", "models.py", "&&","uvicorn", "main:app", "--reload"]
+CMD ["uvicorn", "main:app", "--workers=2", "--worker-class=uvicorn.workers.UvicornWorker"]
