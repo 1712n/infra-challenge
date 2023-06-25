@@ -1,5 +1,5 @@
 optimum[onnxruntime-gpu]==1.8.6
-transformers==4.29.2
+transformers==4.30.0
 torch==1.13.0
 fastapi[all]==0.95.1
 uvicorn==0.22.0
